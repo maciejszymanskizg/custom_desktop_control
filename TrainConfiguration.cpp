@@ -86,6 +86,8 @@ struct Train_Configuration_Entry Train_Config[] = {
 	TRAIN_CONFIG_ENTRY(CONFIGURATION_ID_CONTROLLER_TRAIN_DIRECTION, "Train direction controller", 0, 2, 0),
 	TRAIN_CONFIG_ENTRY(CONFIGURATION_ID_CONTROLLER_ADJUSTER_WHEEL_POSITION, "Adjuster wheel controller position", 0, 43, 0),
 	TRAIN_CONFIG_ENTRY(CONFIGURATION_ID_CONTROLLER_BYPASS_ACTUATOR_POSITION, "Bypass actuator controller position", 0, 6, 0),
+	TRAIN_CONFIG_ENTRY(CONFIGURATION_ID_MAIN_BREAK_VALUE, "Main break value", 0, 1023, 0),
+	TRAIN_CONFIG_ENTRY(CONFIGURATION_ID_LOC_BREAK_VALUE, "Locomotive break value", 0, 1023, 0),
 };
 
 TrainConfiguration::TrainConfiguration() : Configuration("Train Configuration")

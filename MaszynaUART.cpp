@@ -77,11 +77,11 @@ void MaszynaUART::readUART(void)
 	 * trainstate.train_heating << 0
 	 * | trainstate.motor_resistors << 1
 	 * | trainstate.wheelslip << 2
-	 * | rainstate.alerter << 6
+	 * | trainstate.alerter << 6
 	 * | trainstate.shp << 7
 	 */
 	conf->setValue(CONFIGURATION_ID_INDICATOR_TRAIN_HEATING, ((buffer[8] >> 0) & 0x1));
-	conf->setValue(CONFIGURATION_ID_INDICATOR_CONVERTER_OVERLOAD, ((buffer[8] >> 1) & 0x1)); // to check
+	conf->setValue(CONFIGURATION_ID_INDICATOR_RESTISTOR_RIDE, ((buffer[8] >> 1) & 0x1));
 	conf->setValue(CONFIGURATION_ID_INDICATOR_WHEELSLIP, ((buffer[8] >> 2) & 0x1));
 	conf->setValue(CONFIGURATION_ID_INDICATOR_ALERTER, ((buffer[8] >> 6) & 0x1));
 	conf->setValue(CONFIGURATION_ID_INDICATOR_SHP, ((buffer[8] >> 7) & 0x1));
@@ -178,52 +178,70 @@ void MaszynaUART::writeUART(void)
 
 	/* byte 4 : switch group 0 */
 	buffer[4] =
-		(getConfigValue(CONFIGURATION_ID_BUTTON_SHP_ALERTER_RESET) & 0x1) |
-		((getConfigValue(CONFIGURATION_ID_BUTTON_RELAXER) & 0x1) << 1) |
-		((getConfigValue(CONFIGURATION_ID_BUTTON_TRACTION_ENGINE_OVERLOAD_UNLOCK) & 0x1) << 2) |
-		((getConfigValue(CONFIGURATION_ID_BUTTON_LINE_BREAKER_ENABLE) & 0x1) << 3) |
-		((getConfigValue(CONFIGURATION_ID_BUTTON_LINE_BREAKER_DISABLE) & 0x1) << 4) |
-		((getConfigValue(CONFIGURATION_ID_BUTTON_CONVERTER_OVERLOAD_UNLOCK) & 0x1) << 5);
+		(getConfigValue(CONFIGURATION_ID_SWITCH_CABIN_ACTIVATION) & 0x1) |
+		((getConfigValue(CONFIGURATION_ID_SWITCH_LEGS_HEATING) & 0x1) << 1) |
+		((getConfigValue(CONFIGURATION_ID_SWITCH_CABIN_LIGHT_DIMM) & 0x1) << 2) |
+		((getConfigValue(CONFIGURATION_ID_SWITCH_MEASURE_INSTRUMENT_LIGHT_DIMM) & 0x1) << 3) |
+		((getConfigValue(CONFIGURATION_ID_SWITCH_SIGNAL_LAMP1_DIMM) & 0x1) << 4) |
+		((getConfigValue(CONFIGURATION_ID_SWITCH_SIGNAL_LAMP2_DIMM) & 0x1) << 5) |
+		((getConfigValue(CONFIGURATION_ID_SWITCH_SIGNAL_LAMP_RED_LEFT) & 0x1) << 6) |
+		((getConfigValue(CONFIGURATION_ID_SWITCH_RESERVE) & 0x1) << 7);
 
 	/* byte 5 : switch group 1 */
 	buffer[5] =
-		(getConfigValue(CONFIGURATION_ID_SWITCH_CONVERTER) & 0x1) |
-		((getConfigValue(CONFIGURATION_ID_SWITCH_COMPRESSOR) & 0x1) << 1) |
-		((getConfigValue(CONFIGURATION_ID_SWITCH_TRAIN_HEATING) & 0x1) << 2) |
-		((getConfigValue(CONFIGURATION_ID_SWITCH_PANTHOGRAPH_A) & 0x1) << 3) |
-		((getConfigValue(CONFIGURATION_ID_SWITCH_PANTHOGRAPH_B) & 0x1) << 4) |
-		((getConfigValue(CONFIGURATION_ID_SWITCH_BATTERY) & 0x1) << 5) |
-		((getConfigValue(CONFIGURATION_ID_SWITCH_CABIN_ACTIVATION) & 0x1) << 6);
+		(getConfigValue(CONFIGURATION_ID_SWITCH_SIGNAL_LAMP_RED_RIGHT) & 0x1) |
+		((getConfigValue(CONFIGURATION_ID_SWITCH_MAIN_LIGHT) & 0x1) << 1) |
+		((getConfigValue(CONFIGURATION_ID_SWITCH_CABIN_LIGHT) & 0x1) << 2) |
+		((getConfigValue(CONFIGURATION_ID_SWITCH_MEASURE_INSTRUMENT_LIGHT) & 0x1) << 3) |
+		((getConfigValue(CONFIGURATION_ID_SWITCH_HIGH_VOLTAGE_BOX_LIGHT) & 0x1) << 4) |
+		((getConfigValue(CONFIGURATION_ID_SWITCH_SIGNAL_LIGHT_LEFT) & 0x1) << 5) |
+		((getConfigValue(CONFIGURATION_ID_SWITCH_SIGNAL_LIGHT_TOP) & 0x1) << 6) |
+		((getConfigValue(CONFIGURATION_ID_SWITCH_SIGNAL_LIGHT_RIGHT) & 0x1) << 7);
 
 	/* byte 6 : switch group 2 */
 	buffer[6] =
-		(getConfigValue(CONFIGURATION_ID_SWITCH_CABIN_LIGHT) & 0x1) |
-		((getConfigValue(CONFIGURATION_ID_SWITCH_MEASURE_INSTRUMENT_LIGHT) & 0x1) << 1) |
-		((getConfigValue(CONFIGURATION_ID_SWITCH_SIGNAL_LAMP_RED_LEFT) & 0x1) << 2) |
-		((getConfigValue(CONFIGURATION_ID_SWITCH_SIGNAL_LAMP_RED_RIGHT) & 0x1) << 3) |
-		((getConfigValue(CONFIGURATION_ID_SWITCH_SIGNAL_LIGHT_LEFT) & 0x1) << 4) |
-		((getConfigValue(CONFIGURATION_ID_SWITCH_SIGNAL_LIGHT_TOP) & 0x1) << 5) |
-		((getConfigValue(CONFIGURATION_ID_SWITCH_SIGNAL_LIGHT_RIGHT) & 0x1) << 6) |
-		((getConfigValue(CONFIGURATION_ID_SWITCH_MAIN_LIGHT) & 0x1) << 7);
+		(getConfigValue(CONFIGURATION_ID_SWITCH_BATTERY) & 0x1) |
+		((getConfigValue(CONFIGURATION_ID_SWITCH_SHP_INDICATOR_DIMM) & 0x1) << 1) |
+		((getConfigValue(CONFIGURATION_ID_SWITCH_PANTHOGRAPH_A) & 0x1) << 2) |
+		((getConfigValue(CONFIGURATION_ID_SWITCH_COMPRESSOR) & 0x1) << 3) |
+		((getConfigValue(CONFIGURATION_ID_SWITCH_CONVERTER) & 0x1) << 4) |
+		((getConfigValue(CONFIGURATION_ID_SWITCH_ALERTER_INDICATOR_DIMM) & 0x1) << 5) |
+		((getConfigValue(CONFIGURATION_ID_SWITCH_PANTHOGRAPH_B) & 0x1) << 6) |
+		((getConfigValue(CONFIGURATION_ID_SWITCH_TRAIN_HEATING) & 0x1) << 7);
 
 	/* byte 7 : switch group 3 */
-	unsigned int break_mode = getConfigValue(CONFIGURATION_ID_SWITCH_BREAK_MODE);
 	buffer[7] =
-		(((break_mode == 0) ? 1 : 0) & 0x1) |
-		((((break_mode == 1) ? 1 : 0) & 0x1) << 1) |
-		((((break_mode == 2) ? 1 : 0) & 0x1) << 2) |
-		((getConfigValue(CONFIGURATION_ID_SWITCH_WHEEL_PUSH_MODE) & 0x1) << 3) |
-		((getConfigValue(CONFIGURATION_ID_SWITCH_VOLTAGE_RANGE_MODE) & 0x1) << 4);
+		(getConfigValue(CONFIGURATION_ID_BUTTON_RESERVE) & 0x1) |
+		((getConfigValue(CONFIGURATION_ID_BUTTON_COMPRESSOR_OVERLOAD_UNLOCK) & 0x1) << 1) |
+		((getConfigValue(CONFIGURATION_ID_BUTTON_LINE_BREAKER_DISABLE) & 0x1) << 2) |
+		((getConfigValue(CONFIGURATION_ID_BUTTON_LINE_BREAKER_ENABLE) & 0x1) << 3) |
+		((getConfigValue(CONFIGURATION_ID_BUTTON_TRACTION_ENGINE_OVERLOAD_UNLOCK) & 0x1) << 4) |
+		((getConfigValue(CONFIGURATION_ID_BUTTON_CONVERTER_OVERLOAD_UNLOCK) & 0x1) << 5) |
+		((getConfigValue(CONFIGURATION_ID_BUTTON_LINE_CONTACTORS_DISABLE) & 0x1) << 6) |
+		((getConfigValue(CONFIGURATION_ID_BUTTON_WHEELSLIP_COUNTER_ACTION) & 0x1) << 7);
 
 	/* byte 8 : switch group 4 */
+	buffer[8] =
+		(getConfigValue(CONFIGURATION_ID_SWITCH_SIGNAL_LIGHT1_DIMM) & 0x1) |
+		((getConfigValue(CONFIGURATION_ID_SWITCH_SIGNAL_LIGHT2_DIMM) & 0x1) << 1) |
+		((getConfigValue(CONFIGURATION_ID_BUTTON_RELAXER) & 0x1) << 2) |
+		((getConfigValue(CONFIGURATION_ID_BUTTON_SHP_ALERTER_RESET) & 0x1) << 3) |
+		((getConfigValue(CONFIGURATION_ID_BUTTON_SIREN_LOW) & 0x1) << 4) |
+		((getConfigValue(CONFIGURATION_ID_BUTTON_SIREN_HIGH) & 0x1) << 5) |
+		((getConfigValue(CONFIGURATION_ID_CONTROLLER_TRAIN_DIRECTION) & 0x3) << 6);
 
 	/* byte 9 : switch group 5 */
+	buffer[9] =
+		(getConfigValue(CONFIGURATION_ID_SWITCH_BREAK_MODE) & 0x3) |
+		((getConfigValue(CONFIGURATION_ID_SWITCH_WHEEL_PUSH_MODE) & 0x1) << 2) |
+		((getConfigValue(CONFIGURATION_ID_SWITCH_VOLTAGE_RANGE_MODE) & 0x1) << 3) |
+		((getConfigValue(CONFIGURATION_ID_SWITCH_WIPERS_MODE) & 0x7) << 4);
 
 	/* byte 10 : master controller */
 	buffer[10] = getConfigValue(CONFIGURATION_ID_CONTROLLER_ADJUSTER_WHEEL_POSITION) & 0xff;
 
 	/* byte 11 : second controller */
-	buffer[11] = getConfigValue(CONFIGURATION_ID_CONTROLLER_BYPASS_ACTUATOR_POSITION) & 0xff;
+	buffer[11] = getConfigValue(CONFIGURATION_ID_CONTROLLER_SHUNT_POSITION) & 0xff;
 
 	/* byte 12 - 13 : train break */
 	buffer[12] = (getConfigValue(CONFIGURATION_ID_MAIN_BREAK_VALUE) >> 8) & 0xff;
@@ -236,7 +254,7 @@ void MaszynaUART::writeUART(void)
 	/* byte 16 : radio controll */
 	buffer[16] = 0xF0 /* max volume */ | (getConfigValue(CONFIGURATION_ID_SWITCH_RADIO_CHANNEL) & 0xf);
 
-	/* byte 17 - 19 : 0 */
+	/* bytes 17 - 19 : 0 */
 
 	ssize_t bytes = uart->writeData(buffer, MASZYNA_OUTPUT_BUFFER_SIZE);
 	if (bytes != MASZYNA_OUTPUT_BUFFER_SIZE) {

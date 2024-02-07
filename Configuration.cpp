@@ -73,3 +73,13 @@ bool Configuration::getValue(const unsigned int id, unsigned int & value)
 	value = entry->getValue();
 	return true;
 }
+
+void Configuration::accessLock(void)
+{
+	mutex.lock();
+}
+
+void Configuration::accessUnlock(void)
+{
+	mutex.unlock();
+}

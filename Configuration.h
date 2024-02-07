@@ -4,11 +4,14 @@
 #include <string>
 #include <map>
 #include "ConfigurationEntry.h"
+#include "Mutex.h"
 
 class Configuration {
 	private:
 		std::string name;
 		std::map<const unsigned int, ConfigurationEntry *> entries;
+		Mutex mutex;
+
 	protected:
 		bool addConfigurationEntry(const unsigned int id, ConfigurationEntry *entry);
 	public:
@@ -19,6 +22,9 @@ class Configuration {
 		ConfigurationEntry *getEntry(const unsigned int id);
 		bool setValue(const unsigned int id, unsigned int value);
 		bool getValue(const unsigned int id, unsigned int & value);
+
+		void accessLock(void);
+		void accessUnlock(void);
 };
 
 #endif /* CONFIGURATION_H */

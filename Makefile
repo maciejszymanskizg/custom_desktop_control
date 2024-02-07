@@ -18,7 +18,10 @@ OBJECTS := $(patsubst %.cpp,%.o,$(SOURCES))
 CXX ?= g++
 
 # Compiler flags
-CXXFLAGS = -Wall -Werror -DVERSION=\"$(GIT_VERSION)\"
+CXXFLAGS = -Wall -Werror -DVERSION=\"$(GIT_VERSION)\" -g
+
+# Linker flags
+LDFLAGS = -lpthread
 
 # Target applciation
 TARGET := custom_desktop_controll
@@ -28,7 +31,7 @@ all: $(TARGET)
 
 $(TARGET): $(OBJECTS)
 	@echo -e "Linking $(GREEN)$^$(NORMAL) -> $(BOLD)$(YELLOW)$(TARGET)$(NORMAL)"
-	@$(CXX) $^ -o $(TARGET)
+	@$(CXX) $^ -o $(TARGET) $(LDFLAGS)
 
 %.o: %.cpp
 	@echo -e "Compiling $(CYAN)$<$(NORMAL) -> $(BOLD)$(GREEN)$@$(NORMAL)"

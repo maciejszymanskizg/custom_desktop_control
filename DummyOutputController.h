@@ -6,7 +6,7 @@
 class DummyOutputController : public IDummyController {
 	public:
 		DummyOutputController(Configuration *conf);
-		~DummyOutputController();
+		virtual ~DummyOutputController();
 
 		virtual void sync(SyncDirection direction);
 };

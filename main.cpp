@@ -6,6 +6,9 @@
 #include <unistd.h>
 #include <getopt.h>
 #include <limits.h>
+#include <signal.h>
+#include <thread>
+#include <chrono>
 #include "Logger.h"
 #include "TrainConfiguration.h"
 #include "MaszynaUART.h"
@@ -49,6 +52,8 @@ struct MainOptions {
 	IController *input_controller;
 	IController *output_controller;
 	Configuration *configuration;
+	std::thread *main_thread;
+	bool thread_running_flag;
 };
 
 IController *createMaszynaUARTInputController(ICommunicationHandler *communication_handler,
@@ -321,6 +326,10 @@ void clearOptions(struct MainOptions & options)
 	options.params.input_port = USHRT_MAX;
 	options.params.output_port = USHRT_MAX;
 	options.configuration = new TrainConfiguration();
+	options.input_controller = nullptr;
+	options.output_controller = nullptr;
+	options.main_thread = nullptr;
+	options.thread_running_flag = true;
 }
 
 bool setup(struct MainOptions & options)
@@ -377,6 +386,46 @@ out:
 	return result;
 }
 
+void freeOptions(struct MainOptions & options)
+{
+	if (options.input_controller != nullptr)
+		delete options.input_controller;
+
+	if (options.output_controller != nullptr)
+		delete options.output_controller;
+
+	if (options.configuration != nullptr)
+		delete options.configuration;
+
+	if (options.main_thread != nullptr) {
+		options.thread_running_flag = false;
+		options.main_thread->join();
+		delete options.main_thread;
+	}
+}
+
+void mainThreadFunc(struct MainOptions & options)
+{
+	log_debug("Starting main thread.\n");
+	while (options.thread_running_flag) {
+		options.input_controller->sync(IController::SyncDirection::FROM_CONTROLLER);
+		options.output_controller->sync(IController::SyncDirection::TO_CONTROLLER);
+		options.output_controller->sync(IController::SyncDirection::FROM_CONTROLLER);
+		options.input_controller->sync(IController::SyncDirection::TO_CONTROLLER);
+
+		std::this_thread::sleep_for(std::chrono::microseconds(50));
+	}
+}
+
+static volatile sig_atomic_t keep_running = 1;
+
+static void signalHandler(int signal_no)
+{
+	(void)signal_no;
+	keep_running = 0;
+	log_debug("Interrupted.\n");
+}
+
 int main(int argc, char *argv[])
 {
 	int status = EXIT_FAILURE;
@@ -392,8 +441,22 @@ int main(int argc, char *argv[])
 		goto out;
 	}
 
+	signal(SIGINT, signalHandler);
+
+	options.main_thread = new std::thread(mainThreadFunc, std::ref(options));
+	if (options.main_thread == nullptr) {
+		log_error("Could not create main thread.\n");
+		goto out;
+	}
+
+	while (keep_running) {
+		std::this_thread::sleep_for(std::chrono::microseconds(25));
+	}
+
+	options.thread_running_flag = false;
 	status = EXIT_SUCCESS;
 
 out:
+	freeOptions(options);
 	return status;
 }

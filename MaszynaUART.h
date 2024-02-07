@@ -13,7 +13,7 @@ class MaszynaUART : public IController {
 		unsigned int getConfigValue(unsigned int id);
 	public:
 		MaszynaUART(ICommunicationHandler *uart, Configuration *conf);
-		~MaszynaUART();
+		virtual ~MaszynaUART();
 
 		void readUART(void);
 		void writeUART(void);

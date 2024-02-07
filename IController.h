@@ -14,6 +14,8 @@ class IController {
 		};
 
 		IController(ControllerType type);
+		virtual ~IController();
+
 		enum ControllerType getType(void);
 		virtual void sync(SyncDirection dir) = 0;
 

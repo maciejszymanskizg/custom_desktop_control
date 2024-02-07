@@ -6,7 +6,7 @@
 class DummyInputController : public IDummyController {
 	public:
 		DummyInputController(Configuration *conf);
-		~DummyInputController();
+		virtual ~DummyInputController();
 
 		virtual void sync(SyncDirection direction);
 };

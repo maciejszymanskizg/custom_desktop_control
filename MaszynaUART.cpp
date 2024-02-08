@@ -233,14 +233,17 @@ void MaszynaUART::writeUART(void)
 		((getConfigValue(CONFIGURATION_ID_BUTTON_SHP_ALERTER_RESET) & 0x1) << 3) |
 		((getConfigValue(CONFIGURATION_ID_BUTTON_SIREN_LOW) & 0x1) << 4) |
 		((getConfigValue(CONFIGURATION_ID_BUTTON_SIREN_HIGH) & 0x1) << 5) |
-		((getConfigValue(CONFIGURATION_ID_CONTROLLER_TRAIN_DIRECTION) & 0x3) << 6);
+		((getConfigValue(CONFIGURATION_ID_SWITCH_WHEEL_PUSH_MODE) & 0x1) << 6) |
+		((getConfigValue(CONFIGURATION_ID_SWITCH_VOLTAGE_RANGE_MODE) & 0x1) << 7);
 
 	/* byte 9 : switch group 5 */
 	buffer[9] =
-		(getConfigValue(CONFIGURATION_ID_SWITCH_BREAK_MODE) & 0x3) |
-		((getConfigValue(CONFIGURATION_ID_SWITCH_WHEEL_PUSH_MODE) & 0x1) << 2) |
-		((getConfigValue(CONFIGURATION_ID_SWITCH_VOLTAGE_RANGE_MODE) & 0x1) << 3) |
-		((getConfigValue(CONFIGURATION_ID_SWITCH_WIPERS_MODE) & 0x7) << 4);
+		((getConfigValue(CONFIGURATION_ID_SWITCH_BREAK_MODE) == 0) & 0x1) |
+		(((getConfigValue(CONFIGURATION_ID_SWITCH_BREAK_MODE) == 1) & 0x1) << 1) |
+		(((getConfigValue(CONFIGURATION_ID_SWITCH_BREAK_MODE) == 2) & 0x1) << 2) |
+		(((getConfigValue(CONFIGURATION_ID_CONTROLLER_TRAIN_DIRECTION) == 1) & 0x1) << 3) |
+		(((getConfigValue(CONFIGURATION_ID_CONTROLLER_TRAIN_DIRECTION) == 0) & 0x1) << 4) |
+		(((getConfigValue(CONFIGURATION_ID_CONTROLLER_TRAIN_DIRECTION) == 2) & 0x1) << 5);
 
 	/* byte 10 : master controller */
 	buffer[10] = getConfigValue(CONFIGURATION_ID_CONTROLLER_ADJUSTER_WHEEL_POSITION) & 0xff;

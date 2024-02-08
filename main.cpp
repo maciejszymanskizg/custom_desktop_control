@@ -407,6 +407,10 @@ void freeOptions(struct MainOptions & options)
 void mainThreadFunc(struct MainOptions & options)
 {
 	log_debug("Starting main thread.\n");
+	log_debug("Initial configuration : \n");
+	options.configuration->dumpConfig();
+	log_debug("\n\n");
+
 	while (options.thread_running_flag) {
 		options.input_controller->sync(IController::SyncDirection::FROM_CONTROLLER);
 		options.output_controller->sync(IController::SyncDirection::TO_CONTROLLER);

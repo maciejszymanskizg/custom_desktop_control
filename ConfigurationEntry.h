@@ -13,7 +13,6 @@ class ConfigurationEntry {
 
 	public:
 		ConfigurationEntry(const std::string & name, unsigned int min_value, unsigned int max_value, unsigned int init_value);
-		unsigned int getId(void);
 		std::string & getName(void);
 		unsigned int getValue(void);
 		unsigned int getPrevValue(void);

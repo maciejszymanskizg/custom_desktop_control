@@ -4,6 +4,9 @@
 #include "IDummyController.h"
 
 class DummyOutputController : public IDummyController {
+	private:
+		Configuration *conf;
+
 	public:
 		DummyOutputController(Configuration *conf);
 		virtual ~DummyOutputController();

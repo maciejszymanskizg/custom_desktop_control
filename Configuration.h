@@ -25,6 +25,9 @@ class Configuration {
 
 		void accessLock(void);
 		void accessUnlock(void);
+
+		void dumpConfig(void);
+		bool dumpConfigUpdates(void);
 };
 
 #endif /* CONFIGURATION_H */

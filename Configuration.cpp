@@ -83,3 +83,33 @@ void Configuration::accessUnlock(void)
 {
 	mutex.unlock();
 }
+
+void Configuration::dumpConfig(void)
+{
+	std::map<const unsigned int, ConfigurationEntry *>::iterator it;
+
+	for (it = this->entries.begin(); it != this->entries.end(); it++) {
+		log_debug("[0x%08x] [%s] : %u\n", it->first, it->second->getName().c_str(),
+				it->second->getValue());
+	}
+}
+
+bool Configuration::dumpConfigUpdates(void)
+{
+	bool result = false;
+	std::map<const unsigned int, ConfigurationEntry *>::iterator it;
+
+	for (it = this->entries.begin(); it != this->entries.end(); it++) {
+		if (it->second->getValue() != it->second->getPrevValue()) {
+			log_debug("[0x%08x] [%s] : %u -> %u\n", it->first, it->second->getName().c_str(),
+					it->second->getPrevValue(), it->second->getValue());
+
+			/* update prev value to avoid logging it again until change */
+			it->second->setValue(it->second->getValue());
+
+			result = true;
+		}
+	}
+
+	return result;
+}

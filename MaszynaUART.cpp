@@ -6,11 +6,15 @@
 #define MASZYNA_INPUT_BUFFER_SIZE 52
 #define MASZYNA_OUTPUT_BUFFER_SIZE 20
 
+#define UNPACK_16BIT(a, b) ((a & 0xff) | ((b & 0xff) << 8))
+
+
 MaszynaUART::MaszynaUART(ICommunicationHandler *uart, Configuration *conf) :
 	IController(IController::ControllerType::HOST_CONTROLLER)
 {
 	this->uart = uart;
 	this->conf = conf;
+	this->packet_received = false;
 }
 
 MaszynaUART::~MaszynaUART()
@@ -21,9 +25,33 @@ void MaszynaUART::sync(IController::SyncDirection dir)
 {
 	if (dir == IController::SyncDirection::FROM_CONTROLLER) {
 		readUART();
-	} else {
+	} else if (packet_received) {
 		writeUART();
 	}
+}
+
+bool MaszynaUART::readBuffer(uint8_t *buffer, size_t size)
+{
+	bool result = true;
+	ssize_t bytes = 0;
+	size_t total_bytes = 0;
+
+	while (total_bytes < size) {
+		bytes = uart->readData(&buffer[total_bytes], size - total_bytes);
+
+		if (bytes > 0) {
+			total_bytes += (size_t) bytes;
+		} else {
+			if (bytes != 0) {
+				log_error("Interrupted read with result %d at offset %u\n", bytes, total_bytes);
+			}
+
+			result = false;
+			break;
+		}
+	}
+
+	return result;
 }
 
 void MaszynaUART::readUART(void)
@@ -31,11 +59,10 @@ void MaszynaUART::readUART(void)
 	uint8_t buffer[MASZYNA_INPUT_BUFFER_SIZE];
 	bzero(buffer, MASZYNA_INPUT_BUFFER_SIZE);
 
-	ssize_t bytes = uart->readData(buffer, MASZYNA_INPUT_BUFFER_SIZE);
-	if (bytes != MASZYNA_INPUT_BUFFER_SIZE) {
-		log_error("Received only %d from expected %d bytes !\n", bytes, MASZYNA_INPUT_BUFFER_SIZE);
+	if (readBuffer(buffer, MASZYNA_INPUT_BUFFER_SIZE) == false)
 		return;
-	}
+
+	this->packet_received = true;
 
 	/* check preamble (bytes 0 - 3) */
 	if ((buffer[0] != 0xEF) ||
@@ -49,7 +76,7 @@ void MaszynaUART::readUART(void)
 	conf->accessLock();
 
 	/* byte 4 - 5  tacho */
-	conf->setValue(CONFIGURATION_ID_HASLER_VELOCITY, ((buffer[4] << 8) | buffer[5]));
+	conf->setValue(CONFIGURATION_ID_HASLER_VELOCITY, UNPACK_16BIT(buffer[4], buffer[5]));
 
 	/* byte 6 :
 	 * trainstate.epbrake_enabled << 0
@@ -112,25 +139,25 @@ void MaszynaUART::readUART(void)
 	conf->setValue(CONFIGURATION_ID_INDICATOR_BUZZER, ((buffer[10] >> 7) & 0x1));
 
 	/* byte 11 - 12 : brake_press */
-	conf->setValue(CONFIGURATION_ID_BREAK_PRESSURE, ((buffer[11] << 8) | buffer[12]));
+	conf->setValue(CONFIGURATION_ID_BREAK_PRESSURE, UNPACK_16BIT(buffer[11], buffer[12]));
 
 	/* byte 13 - 14 : pipe_press */
-	conf->setValue(CONFIGURATION_ID_PIPE_PRESSURE, ((buffer[13] << 8) | buffer[14]));
+	conf->setValue(CONFIGURATION_ID_PIPE_PRESSURE, UNPACK_16BIT(buffer[13], buffer[14]));
 
 	/* byte 15 - 16 : tank_press */
-	conf->setValue(CONFIGURATION_ID_TANK_PRESSURE, ((buffer[15] << 8) | buffer[16]));
+	conf->setValue(CONFIGURATION_ID_TANK_PRESSURE, UNPACK_16BIT(buffer[15], buffer[16]));
 
 	/* byte 17 - 18 : hv_voltage */
-	conf->setValue(CONFIGURATION_ID_VOLTMETER_HIGH_VOLTAGE, ((buffer[17] << 8) | buffer[18]));
+	conf->setValue(CONFIGURATION_ID_VOLTMETER_HIGH_VOLTAGE, UNPACK_16BIT(buffer[17], buffer[18]));
 
 	/* byte 19 - 20 : current1 */
-	conf->setValue(CONFIGURATION_ID_AMMETER_HIGH_VOLTAGE1, ((buffer[19] << 8) | buffer[20]));
+	conf->setValue(CONFIGURATION_ID_AMMETER_HIGH_VOLTAGE1, UNPACK_16BIT(buffer[19], buffer[20]));
 
 	/* byte 21 - 22 : current2 */
-	conf->setValue(CONFIGURATION_ID_AMMETER_HIGH_VOLTAGE2, ((buffer[21] << 8) | buffer[22]));
+	conf->setValue(CONFIGURATION_ID_AMMETER_HIGH_VOLTAGE2, UNPACK_16BIT(buffer[21], buffer[22]));
 
 	/* byte 23 - 24 : current3 */
-	conf->setValue(CONFIGURATION_ID_AMMETER_HIGH_VOLTAGE3, ((buffer[23] << 8) | buffer[24]));
+	conf->setValue(CONFIGURATION_ID_AMMETER_HIGH_VOLTAGE3, UNPACK_16BIT(buffer[23], buffer[24]));
 
 	/* byte 25 - 26 : (time.wYear - 1) * 12 + time.wMonth - 1 */
 
@@ -146,12 +173,12 @@ void MaszynaUART::readUART(void)
 			(buffer[34] & 0xff));
 
 	/* byte 35 - 36 : lv_voltage */
-	conf->setValue(CONFIGURATION_ID_VOLTMETER_LOW_VOLTAGE, ((buffer[35] << 8) | buffer[36]));
+	conf->setValue(CONFIGURATION_ID_VOLTMETER_LOW_VOLTAGE, UNPACK_16BIT(buffer[35], buffer[36]));
 
 	/* byte 37 : trainstate.radio_channel */
 
 	/* byte 38 - 39 : pantograph_press */
-	conf->setValue(CONFIGURATION_ID_PANTOGRAH_PRESSURE, ((buffer[38] & 0xff) << 8) | (buffer[39] & 0xff));
+	conf->setValue(CONFIGURATION_ID_PANTOGRAH_PRESSURE, UNPACK_16BIT(buffer[38], buffer[39]));
 
 	/* byte 40 - 51 : 0 */
 
@@ -252,12 +279,12 @@ void MaszynaUART::writeUART(void)
 	buffer[11] = getConfigValue(CONFIGURATION_ID_CONTROLLER_SHUNT_POSITION) & 0xff;
 
 	/* byte 12 - 13 : train break */
-	buffer[12] = (getConfigValue(CONFIGURATION_ID_MAIN_BREAK_VALUE) >> 8) & 0xff;
-	buffer[13] = getConfigValue(CONFIGURATION_ID_MAIN_BREAK_VALUE) & 0xff;
+	buffer[12] = (getConfigValue(CONFIGURATION_ID_MAIN_BREAK_VALUE) & 0xff);
+	buffer[13] = ((getConfigValue(CONFIGURATION_ID_MAIN_BREAK_VALUE) & 0xff) << 8);
 
 	/* byte 14 - 15 : locomotive break */
-	buffer[14] = (getConfigValue(CONFIGURATION_ID_LOC_BREAK_VALUE) >> 8) & 0xff;
-	buffer[15] = getConfigValue(CONFIGURATION_ID_LOC_BREAK_VALUE) & 0xff;
+	buffer[14] = (getConfigValue(CONFIGURATION_ID_LOC_BREAK_VALUE) & 0xff);
+	buffer[15] = ((getConfigValue(CONFIGURATION_ID_LOC_BREAK_VALUE) & 0xff) << 8);
 
 	/* byte 16 : radio controll */
 	buffer[16] = 0xF0 /* max volume */ | (getConfigValue(CONFIGURATION_ID_SWITCH_RADIO_CHANNEL) & 0xf);
@@ -269,5 +296,7 @@ void MaszynaUART::writeUART(void)
 	ssize_t bytes = uart->writeData(buffer, MASZYNA_OUTPUT_BUFFER_SIZE);
 	if (bytes != MASZYNA_OUTPUT_BUFFER_SIZE) {
 		log_error("Sent only %d from expected %d bytes !\n", bytes, MASZYNA_OUTPUT_BUFFER_SIZE);
+	} else {
+		packet_received = false;
 	}
 }

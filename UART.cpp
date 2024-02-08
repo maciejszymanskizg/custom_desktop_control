@@ -44,19 +44,29 @@ speed_t BaudrateToSpeed(UART::Baudrate baudrate)
 
 UART::UART(const std::string & device, UART::Baudrate baudrate)
 {
-	fd = open(device.c_str(), O_RDWR);
+	fd = open(device.c_str(), O_RDWR | O_NOCTTY | O_NDELAY);
 	if (fd == -1) {
 		log_error("Could not open UART device [%s] : %s\n", device.c_str(), strerror(errno));
 	} else {
-		struct termios tty;
+		struct termios options;
 
-		if (tcgetattr(fd, &tty) != 0) {
-			if (cfsetspeed(&tty, BaudrateToSpeed(baudrate)) != 0) {
-				log_error("Could not set baudrate : %s\n", strerror(errno));
-			}
-		} else {
-			log_error("Could not get serial port tty attributes : %s\n", strerror(errno));
-		}
+		fcntl(fd, F_SETFL, O_RDWR);
+		tcgetattr(fd, &options);
+
+		cfmakeraw(&options);
+		cfsetispeed(&options, BaudrateToSpeed(baudrate));
+		cfsetospeed(&options, BaudrateToSpeed(baudrate));
+
+		options.c_cflag |= (CLOCAL | CREAD);
+		options.c_cflag &= ~PARENB;
+		options.c_cflag &= ~CSTOPB;
+		options.c_cflag &= ~CSIZE;
+		options.c_cflag |= CS8;
+		options.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG);
+		options.c_oflag &= ~OPOST;
+		options.c_cc [VMIN] = 0;
+		options.c_cc [VTIME] = 100;
+		tcsetattr (fd, TCSANOW, &options);
 	}
 }
 

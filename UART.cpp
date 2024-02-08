@@ -65,7 +65,7 @@ UART::UART(const std::string & device, UART::Baudrate baudrate)
 		options.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG);
 		options.c_oflag &= ~OPOST;
 		options.c_cc [VMIN] = 0;
-		options.c_cc [VTIME] = 100;
+		options.c_cc [VTIME] = 5;
 		tcsetattr (fd, TCSANOW, &options);
 	}
 }

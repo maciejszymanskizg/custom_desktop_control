@@ -8,18 +8,23 @@
 
 class I2C : public ICommunicationHandler
 {
-    private:
-        int fd;
+	private:
+		int fd;
+		bool use_smbus;
 
-    public:
-        I2C(const std::string & path);
-        virtual ~I2C();
+		ssize_t readSMBusData(uint8_t *buffer, size_t length);
+		ssize_t writeSMBusData(const uint8_t *buffer, size_t length);
 
-        int setSlaveAddr(uint8_t addr);
+	public:
+		I2C(const std::string & path);
+		virtual ~I2C();
 
-        virtual HandlerType getHandlerType(void);
-        virtual ssize_t readData(uint8_t *buffer, size_t length);
-        virtual ssize_t writeData(const uint8_t *buffer, size_t length);
+		int setSlaveAddr(uint8_t addr);
+		void setSMBus(bool enable);
+
+		virtual HandlerType getHandlerType(void);
+		virtual ssize_t readData(uint8_t *buffer, size_t length);
+		virtual ssize_t writeData(const uint8_t *buffer, size_t length);
 };
 
 #endif /* I2C_H */

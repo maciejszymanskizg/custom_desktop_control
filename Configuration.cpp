@@ -9,7 +9,7 @@ Configuration::Configuration(const std::string & name)
 
 Configuration::~Configuration()
 {
-	std::map<const unsigned int, ConfigurationEntry *>::iterator it;
+	std::map<const uint32_t, ConfigurationEntry *>::iterator it;
 	ConfigurationEntry *e;
 
 	while (entries.size() > 0) {
@@ -19,12 +19,12 @@ Configuration::~Configuration()
 	}
 }
 
-bool Configuration::addConfigurationEntry(const unsigned int id, ConfigurationEntry *entry)
+bool Configuration::addConfigurationEntry(const uint32_t id, ConfigurationEntry *entry)
 {
 	if (entry == nullptr)
 		return false;
 
-	std::map<const unsigned int, ConfigurationEntry *>::iterator it =
+	std::map<const uint32_t, ConfigurationEntry *>::iterator it =
 		this->entries.find(id);
 
 	if (it != entries.end()) {
@@ -37,9 +37,9 @@ bool Configuration::addConfigurationEntry(const unsigned int id, ConfigurationEn
 	return true;
 }
 
-ConfigurationEntry *Configuration::getEntry(const unsigned int id)
+ConfigurationEntry *Configuration::getEntry(const uint32_t id)
 {
-	std::map<const unsigned int, ConfigurationEntry *>::iterator it =
+	std::map<const uint32_t, ConfigurationEntry *>::iterator it =
 		this->entries.find(id);
 
 	if (it == entries.end())
@@ -53,7 +53,7 @@ std::string & Configuration::getName(void)
 	return this->name;
 }
 
-bool Configuration::setValue(const unsigned int id, unsigned int value)
+bool Configuration::setValue(const uint32_t id, uint32_t value)
 {
 	ConfigurationEntry *entry = getEntry(id);
 
@@ -63,7 +63,7 @@ bool Configuration::setValue(const unsigned int id, unsigned int value)
 	return entry->setValue(value);
 }
 
-bool Configuration::getValue(const unsigned int id, unsigned int & value)
+bool Configuration::getValue(const uint32_t id, uint32_t & value)
 {
 	ConfigurationEntry *entry = getEntry(id);
 
@@ -86,7 +86,7 @@ void Configuration::accessUnlock(void)
 
 void Configuration::dumpConfig(void)
 {
-	std::map<const unsigned int, ConfigurationEntry *>::iterator it;
+	std::map<const uint32_t, ConfigurationEntry *>::iterator it;
 
 	for (it = this->entries.begin(); it != this->entries.end(); it++) {
 		log_debug("[0x%08x] [%s] : %u\n", it->first, it->second->getName().c_str(),
@@ -97,17 +97,44 @@ void Configuration::dumpConfig(void)
 bool Configuration::dumpConfigUpdates(void)
 {
 	bool result = false;
-	std::map<const unsigned int, ConfigurationEntry *>::iterator it;
+	std::map<const uint32_t, ConfigurationEntry *>::iterator it;
 
 	for (it = this->entries.begin(); it != this->entries.end(); it++) {
 		if (it->second->getValue() != it->second->getPrevValue()) {
 			log_debug("[0x%08x] [%s] : %u -> %u\n", it->first, it->second->getName().c_str(),
 					it->second->getPrevValue(), it->second->getValue());
 
-			/* update prev value to avoid logging it again until change */
-			it->second->setValue(it->second->getValue());
-
 			result = true;
+		}
+	}
+
+	return result;
+}
+
+void Configuration::cleanUpdates(void)
+{
+	std::map<const uint32_t, ConfigurationEntry *>::iterator it;
+
+	for (it = this->entries.begin(); it != this->entries.end(); it++) {
+		if (it->second->getValue() != it->second->getPrevValue()) {
+			it->second->setValue(it->second->getValue());
+		}
+	}
+}
+
+bool Configuration::checkUpdates(uint32_t *ids, size_t elems)
+{
+	bool result = false;
+	std::map<const uint32_t, ConfigurationEntry *>::iterator it;
+
+	for (uint32_t i = 0; i < (uint32_t) elems; i++) {
+		it = this->entries.find(ids[i]);
+
+		if (it != this->entries.end()) {
+			if (it->second->getValue() != it->second->getPrevValue()) {
+				result = true;
+				break;
+			}
 		}
 	}
 

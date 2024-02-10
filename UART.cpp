@@ -44,14 +44,14 @@ speed_t BaudrateToSpeed(UART::Baudrate baudrate)
 
 UART::UART(const std::string & device, UART::Baudrate baudrate)
 {
-	fd = open(device.c_str(), O_RDWR | O_NOCTTY | O_NDELAY);
-	if (fd == -1) {
+	this->fd = open(device.c_str(), O_RDWR | O_NOCTTY | O_NDELAY);
+	if (this->fd == -1) {
 		log_error("Could not open UART device [%s] : %s\n", device.c_str(), strerror(errno));
 	} else {
 		struct termios options;
 
-		fcntl(fd, F_SETFL, O_RDWR);
-		tcgetattr(fd, &options);
+		fcntl(this->fd, F_SETFL, O_RDWR);
+		tcgetattr(this->fd, &options);
 
 		cfmakeraw(&options);
 		cfsetispeed(&options, BaudrateToSpeed(baudrate));
@@ -66,14 +66,14 @@ UART::UART(const std::string & device, UART::Baudrate baudrate)
 		options.c_oflag &= ~OPOST;
 		options.c_cc [VMIN] = 0;
 		options.c_cc [VTIME] = 5;
-		tcsetattr (fd, TCSANOW, &options);
+		tcsetattr (this->fd, TCSANOW, &options);
 	}
 }
 
 UART::~UART()
 {
-	if (fd != -1)
-		close(fd);
+	if (this->fd != -1)
+		close(this->fd);
 }
 
 ICommunicationHandler::HandlerType UART::getHandlerType(void)
@@ -83,22 +83,10 @@ ICommunicationHandler::HandlerType UART::getHandlerType(void)
 
 ssize_t UART::readData(uint8_t *buffer, size_t size)
 {
-	ssize_t res = read(fd, (void *) buffer, size);
-
-	if (res == -1) {
-		log_error("Error in reading UART data : %s\n", strerror(errno));
-	}
-
-	return res;
+	return readFDData(this->fd, buffer, size);
 }
 
 ssize_t UART::writeData(const uint8_t *buffer, size_t size)
 {
-	ssize_t res = write(fd, (void *) buffer, size);
-
-	if (res == -1) {
-		log_error("Error in writing UART data : %s\n", strerror(errno));
-	}
-
-	return res;
+	return writeFDData(this->fd, buffer, size);
 }

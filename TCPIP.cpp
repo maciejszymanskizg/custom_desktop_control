@@ -99,11 +99,11 @@ ICommunicationHandler::HandlerType TCPIP::getHandlerType(void)
 ssize_t TCPIP::readData(uint8_t *buffer, size_t length)
 {
 	int fd = (this->mode == TCPIP_MODE_SERVER ? this->client_sockfd : this->sockfd);
-	return read(fd, buffer, length);
+	return readFDData(fd, buffer, length);
 }
 
 ssize_t TCPIP::writeData(const uint8_t *buffer, size_t length)
 {
 	int fd = (this->mode == TCPIP_MODE_SERVER ? this->client_sockfd : this->sockfd);
-	return write(fd, buffer, length);
+	return writeFDData(fd, buffer, length);
 }

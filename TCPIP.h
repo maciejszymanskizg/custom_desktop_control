@@ -3,8 +3,9 @@
 
 #include <string>
 #include "ICommunicationHandler.h"
+#include "FDOperations.h"
 
-class TCPIP : public ICommunicationHandler {
+class TCPIP : public ICommunicationHandler, FDOperations {
 	public:
 		enum Mode {
 			TCPIP_MODE_SERVER,

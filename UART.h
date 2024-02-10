@@ -4,8 +4,9 @@
 #include <stdint.h>
 #include <string>
 #include "ICommunicationHandler.h"
+#include "FDOperations.h"
 
-class UART : public ICommunicationHandler {
+class UART : public ICommunicationHandler, FDOperations {
 	public:
 		enum Baudrate {
 			BAUDRATE_9600,

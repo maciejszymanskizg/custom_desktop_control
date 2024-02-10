@@ -30,36 +30,12 @@ void MaszynaUART::sync(IController::SyncDirection dir)
 	}
 }
 
-bool MaszynaUART::readBuffer(uint8_t *buffer, size_t size)
-{
-	bool result = true;
-	ssize_t bytes = 0;
-	size_t total_bytes = 0;
-
-	while (total_bytes < size) {
-		bytes = uart->readData(&buffer[total_bytes], size - total_bytes);
-
-		if (bytes > 0) {
-			total_bytes += (size_t) bytes;
-		} else {
-			if (bytes != 0) {
-				log_error("Interrupted read with result %d at offset %u\n", bytes, total_bytes);
-			}
-
-			result = false;
-			break;
-		}
-	}
-
-	return result;
-}
-
 void MaszynaUART::readUART(void)
 {
 	uint8_t buffer[MASZYNA_INPUT_BUFFER_SIZE];
 	bzero(buffer, MASZYNA_INPUT_BUFFER_SIZE);
 
-	if (readBuffer(buffer, MASZYNA_INPUT_BUFFER_SIZE) == false)
+	if (this->uart->readData(buffer, MASZYNA_INPUT_BUFFER_SIZE) != MASZYNA_INPUT_BUFFER_SIZE)
 		return;
 
 	this->packet_received = true;
@@ -293,10 +269,6 @@ void MaszynaUART::writeUART(void)
 
 	conf->accessUnlock();
 
-	ssize_t bytes = uart->writeData(buffer, MASZYNA_OUTPUT_BUFFER_SIZE);
-	if (bytes != MASZYNA_OUTPUT_BUFFER_SIZE) {
-		log_error("Sent only %d from expected %d bytes !\n", bytes, MASZYNA_OUTPUT_BUFFER_SIZE);
-	} else {
-		packet_received = false;
-	}
+	uart->writeData(buffer, MASZYNA_OUTPUT_BUFFER_SIZE);
+	packet_received = false;
 }

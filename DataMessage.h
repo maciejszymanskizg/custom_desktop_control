@@ -4,18 +4,20 @@
 #include <stdint.h>
 #include <vector>
 
-struct MessageItem {
-	uint32_t id;
-	uint32_t value;
-};
-
 class DataMessage {
-	private:
+	public:
 		struct MessageHeader {
 			uint32_t magic;
 			uint16_t message_type;
 			uint16_t number_of_items;
 		};
+		struct MessageItem {
+			uint32_t id;
+			uint32_t value;
+		};
+
+	private:
+
 		struct MessageHeader header;
 		std::vector<struct MessageItem> items;
 		uint8_t *data;
@@ -30,11 +32,11 @@ class DataMessage {
 			MESSAGE_TYPE_CONFIRM_DATA = 0x8
 		};
 
-		DataMessage(enum MessageType type);
+		DataMessage(MessageType type);
 		DataMessage(const uint8_t *buffer, size_t size);
 		~DataMessage();
 
-		void addMessageItem(struct MessageItem item);
+		void addMessageItem(const uint32_t id, const uint32_t value);
 		uint8_t *getRawData(size_t & size);
 
 		enum MessageType getMessageType(void);

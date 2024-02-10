@@ -16,6 +16,8 @@ class Configuration {
 	protected:
 		bool addConfigurationEntry(const uint32_t id, ConfigurationEntry *entry);
 	public:
+		const uint32_t CONFIGURATION_INVALID_VALUE = (uint32_t) -1;
+
 		Configuration(const std::string & name);
 		~Configuration();
 
@@ -23,6 +25,8 @@ class Configuration {
 		ConfigurationEntry *getEntry(const uint32_t id);
 		bool setValue(const uint32_t id, uint32_t value);
 		bool getValue(const uint32_t id, uint32_t & value);
+		uint32_t getValue(const uint32_t id);
+		bool isUpdated(const uint32_t id);
 
 		void accessLock(void);
 		void accessUnlock(void);
@@ -31,7 +35,7 @@ class Configuration {
 		bool dumpConfigUpdates(void);
 		void cleanUpdates(void);
 
-		bool checkUpdates(uint32_t *ids, size_t elems);
+		bool checkUpdates(const uint32_t *ids, size_t elems);
 };
 
 #endif /* CONFIGURATION_H */

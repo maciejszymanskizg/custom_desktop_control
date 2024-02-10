@@ -41,8 +41,13 @@ DataMessage::~DataMessage()
 		delete this->data;
 }
 
-void DataMessage::addMessageItem(struct MessageItem item)
+void DataMessage::addMessageItem(const uint32_t id, const uint32_t value)
 {
+	MessageItem item = {
+		.id = id,
+		.value = value,
+	};
+
 	this->items.push_back(item);
 }
 
@@ -76,7 +81,7 @@ DataMessage::MessageType DataMessage::getMessageType(void)
 	return static_cast<MessageType>(this->header.message_type);
 }
 
-std::vector<struct MessageItem> & DataMessage::getMessageItems(void)
+std::vector<struct DataMessage::MessageItem> & DataMessage::getMessageItems(void)
 {
 	return this->items;
 }

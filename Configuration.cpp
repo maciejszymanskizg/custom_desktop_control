@@ -74,6 +74,20 @@ bool Configuration::getValue(const uint32_t id, uint32_t & value)
 	return true;
 }
 
+uint32_t Configuration::getValue(const uint32_t id)
+{
+	ConfigurationEntry *entry = getEntry(id);
+
+	return (entry ? entry->getValue() : CONFIGURATION_INVALID_VALUE);
+}
+
+bool Configuration::isUpdated(const uint32_t id)
+{
+	ConfigurationEntry *entry = getEntry(id);
+
+	return (entry ? entry->getValue() == entry->getPrevValue() : false);
+}
+
 void Configuration::accessLock(void)
 {
 	mutex.lock();
@@ -122,7 +136,7 @@ void Configuration::cleanUpdates(void)
 	}
 }
 
-bool Configuration::checkUpdates(uint32_t *ids, size_t elems)
+bool Configuration::checkUpdates(const uint32_t *ids, size_t elems)
 {
 	bool result = false;
 	std::map<const uint32_t, ConfigurationEntry *>::iterator it;

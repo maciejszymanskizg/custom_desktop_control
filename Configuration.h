@@ -33,6 +33,8 @@ class Configuration {
 
 		void dumpConfig(void);
 		bool dumpConfigUpdates(void);
+
+		void cleanUpdates(const uint32_t id);
 		void cleanUpdates(void);
 
 		bool checkUpdates(const uint32_t *ids, size_t elems);

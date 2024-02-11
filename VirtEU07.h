@@ -18,6 +18,8 @@ class VirtEU07 : public IController {
 		void handleInput(void);
 		void handleOutput(void);
 
+		void dumpBuffer(uint8_t *buffer, size_t size, bool incomming);
+
 	public:
 		VirtEU07(Configuration *conf, TCPIP *tcpip);
 		virtual ~VirtEU07();

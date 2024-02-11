@@ -40,22 +40,26 @@ bool TCPIP::connectSocket(void)
 		goto err;
 	}
 
+	log_info("%s:%d\n", this->address.c_str(), this->port);
 	bzero(&addr, sizeof(addr));
 	addr.sin_family = AF_INET;
-	if (mode == TCPIP_MODE_CLIENT) {
-		addr.sin_addr.s_addr = inet_addr(address.c_str());
-	} else {
-		addr.sin_addr.s_addr = htonl(INADDR_ANY);
-	}
-	addr.sin_port = htons(port);
+	addr.sin_addr.s_addr = inet_addr(this->address.c_str());
+	addr.sin_port = htons(this->port);
 
 	if (mode == TCPIP_MODE_SERVER) {
+		int enable = 1;
+
+		if (setsockopt(this->sockfd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &enable, sizeof(enable)) != 0) {
+			log_error("Could not change socket options - errno %d\n", errno);
+			goto err;
+		}
+
 		if (bind(this->sockfd, (struct sockaddr *) &addr, sizeof(addr)) != 0) {
 			log_error("Could not bind socket - errno %d\n", errno);
 			goto err;
 		}
 
-		if (listen(this->sockfd, 1) != 0) {
+		if (listen(this->sockfd, 5) != 0) {
 			log_error("Could not listen on socket - errno %d\n", errno);
 			goto err;
 		}
@@ -66,8 +70,8 @@ bool TCPIP::connectSocket(void)
 			log_error("Could not accept connection - errno %d\n", errno);
 			goto err;
 		} else {
-			log_info("Connection with %s on port %u established.\n", inet_ntoa(cli.sin_addr),
-					ntohl(cli.sin_port));
+			log_info("Connection with %s on port %u established (client sock_fd %d).\n", inet_ntoa(cli.sin_addr),
+					ntohs(cli.sin_port), this->client_sockfd);
 		}
 	} else {
 		if (connect(this->sockfd, (struct sockaddr *) &addr, sizeof(addr)) != 0) {

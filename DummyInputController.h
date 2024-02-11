@@ -7,6 +7,7 @@ class DummyInputController : public IDummyController {
 	private:
 		Configuration *conf;
 
+		void generateRandomData(void);
 	public:
 		DummyInputController(Configuration *conf);
 		virtual ~DummyInputController();

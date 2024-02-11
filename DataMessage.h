@@ -19,9 +19,7 @@ class DataMessage {
 	private:
 
 		struct MessageHeader header;
-		std::vector<struct MessageItem> items;
-		uint8_t *data;
-		size_t data_size;
+		std::vector<struct MessageItem *> items;
 
 	public:
 		enum MessageType {
@@ -40,7 +38,7 @@ class DataMessage {
 		uint8_t *getRawData(size_t & size);
 
 		enum MessageType getMessageType(void);
-		std::vector<struct MessageItem> & getMessageItems(void);
+		std::vector<struct MessageItem *> & getMessageItems(void);
 
 	private:
 		enum MessageType message_type;

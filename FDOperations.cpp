@@ -19,8 +19,11 @@ ssize_t FDOperations::readFDData(int fd, uint8_t *buffer, size_t size)
 	while (total_bytes < (ssize_t) size) {
 		res = read(fd, (void *) &buffer[total_bytes], size - total_bytes);
 
-		if (res >= 0) {
+		if (res > 0) {
 			total_bytes += res;
+		} else if (res == 0) {
+			//log_debug("Connection break on peer side.\n");
+			break;
 		} else if ((res == -1) && (errno != EAGAIN)) {
 			log_error("Error in reading TCPIP data (%d).\n", errno);
 			break;
@@ -38,13 +41,19 @@ ssize_t FDOperations::writeFDData(int fd, const uint8_t *buffer, size_t size)
 	while (total_bytes < (ssize_t) size) {
 		res = write(fd, (void *) &buffer[total_bytes], size - total_bytes);
 
-		if (res >= 0) {
+		if (res > 0) {
 			total_bytes += res;
+		} else if (res == 0) {
+			//log_debug("Connection break on peer side.\n");
+			break;
 		} else if ((res == -1) && (errno != EAGAIN)) {
 			log_error("Error in reading TCPIP data (%d).\n", errno);
 			break;
 		}
 	}
+
+	if (size == (size_t) total_bytes)
+		fsync(fd);
 
 	return total_bytes;
 }

@@ -4,7 +4,7 @@
 
 #define DATA_MESSAGE_MAGIC 0x39fd47ca
 
-DataMessage::DataMessage(enum MessageType type) : data(nullptr), data_size(0), message_type(type)
+DataMessage::DataMessage(enum MessageType type) : message_type(type)
 {
 	this->message_type = type;
 	this->header.magic = DATA_MESSAGE_MAGIC;
@@ -12,8 +12,7 @@ DataMessage::DataMessage(enum MessageType type) : data(nullptr), data_size(0), m
 	this->header.number_of_items = 0;
 }
 
-DataMessage::DataMessage(const uint8_t *buffer, size_t size) : data(nullptr), data_size(0),
-	message_type(MESSAGE_TYPE_INVALID_MESSAGE)
+DataMessage::DataMessage(const uint8_t *buffer, size_t size) : message_type(MESSAGE_TYPE_INVALID_MESSAGE)
 {
 	if (size >= sizeof(struct MessageHeader)) {
 		memcpy(&this->header, buffer, sizeof(struct MessageHeader));
@@ -24,10 +23,14 @@ DataMessage::DataMessage(const uint8_t *buffer, size_t size) : data(nullptr), da
 			log_error("Incorrect data message size\n");
 			this->message_type = MESSAGE_TYPE_INVALID_MESSAGE;
 		} else {
-			MessageItem item;
 			for (uint32_t i = 0; i < this->header.number_of_items; i++) {
-				memcpy(&item, &buffer[sizeof(struct MessageHeader) + i * sizeof(struct MessageItem)], sizeof(struct MessageItem));
-				this->items.push_back(item);
+				struct MessageItem *item = new struct MessageItem;
+				if (item) {
+					memcpy(item, &buffer[sizeof(struct MessageHeader) + i * sizeof(struct MessageItem)], sizeof(struct MessageItem));
+					this->items.push_back(item);
+				} else {
+					log_error("Memory allocation error.\n");
+				}
 			}
 		}
 	} else {
@@ -37,43 +40,45 @@ DataMessage::DataMessage(const uint8_t *buffer, size_t size) : data(nullptr), da
 
 DataMessage::~DataMessage()
 {
-	if (this->data != nullptr)
-		delete this->data;
+	for (uint32_t i = 0; i < this->items.size(); i++) {
+		delete this->items[i];
+	}
 }
 
 void DataMessage::addMessageItem(const uint32_t id, const uint32_t value)
 {
-	MessageItem item = {
-		.id = id,
-		.value = value,
-	};
+	struct MessageItem *item = new struct MessageItem;
 
-	this->items.push_back(item);
+	if (item) {
+		item->id = id;
+		item->value = value,
+
+		this->items.push_back(item);
+		this->header.number_of_items++;
+	} else {
+		log_error("Memory allocation error.\n");
+	}
 }
 
 uint8_t *DataMessage::getRawData(size_t & size)
 {
-	if (this->data == nullptr)
-		delete this->data;
+	size = sizeof(struct MessageHeader) + this->header.number_of_items * sizeof(struct MessageItem);
+	uint8_t *data = new uint8_t[size];
 
-	this->data = new uint8_t(sizeof(struct MessageHeader) * this->header.number_of_items * sizeof(struct MessageItem));
-
-	if (this->data != nullptr) {
-		memcpy(this->data, &this->header, sizeof(struct MessageHeader));
+	if (data != nullptr) {
+		memcpy(&data[0], &this->header, sizeof(struct MessageHeader));
 
 		for (uint32_t i = 0; i < this->header.number_of_items; i++) {
-			memcpy(&this->data[sizeof(struct MessageHeader) + i * sizeof(struct MessageItem)],
-					&this->items[i], sizeof(struct MessageItem));
+			struct MessageItem *item = this->items[i];
+			memcpy(&data[sizeof(struct MessageHeader) + i * sizeof(struct MessageItem)],
+					item, sizeof(struct MessageItem));
 		}
 
-		this->data_size = sizeof(struct MessageHeader) * this->header.number_of_items * sizeof(struct MessageItem);
-		size = this->data_size;
 	} else {
 		log_error("Memory allocation error.\n");
-		this->data_size = 0;
 	}
 
-	return this->data;
+	return data;
 }
 
 DataMessage::MessageType DataMessage::getMessageType(void)
@@ -81,7 +86,7 @@ DataMessage::MessageType DataMessage::getMessageType(void)
 	return static_cast<MessageType>(this->header.message_type);
 }
 
-std::vector<struct DataMessage::MessageItem> & DataMessage::getMessageItems(void)
+std::vector<struct DataMessage::MessageItem *> & DataMessage::getMessageItems(void)
 {
 	return this->items;
 }

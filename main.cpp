@@ -17,6 +17,7 @@
 #include "I2C.h"
 #include "UART.h"
 #include "TCPIP.h"
+#include "VirtEU07.h"
 
 enum InputControllerType {
 	INPUT_CONTROLLER_TYPE_UNKNOWN,
@@ -355,8 +356,8 @@ bool setup(struct MainOptions & options)
 		if (options.params.output_ip.size() > 0) {
 			if (options.params.output_port != USHRT_MAX) {
 				options.tcpip_output_handler = new TCPIP(TCPIP::Mode::TCPIP_MODE_SERVER,
-						options.params.input_ip, options.params.input_port);
-				/* TODO : options.output_controller = new VirtEU07(options.tcpip_output_handler, options.configuration); */
+						options.params.output_ip, options.params.output_port);
+				options.output_controller = new VirtEU07(options.configuration, dynamic_cast<TCPIP *>(options.tcpip_output_handler));
 			} else {
 				log_error("TCPIP port of output controller not specified.\n");
 				goto out;

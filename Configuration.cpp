@@ -85,7 +85,7 @@ bool Configuration::isUpdated(const uint32_t id)
 {
 	ConfigurationEntry *entry = getEntry(id);
 
-	return (entry ? entry->getValue() == entry->getPrevValue() : false);
+	return (entry ? entry->getValue() != entry->getPrevValue() : false);
 }
 
 void Configuration::accessLock(void)
@@ -123,6 +123,15 @@ bool Configuration::dumpConfigUpdates(void)
 	}
 
 	return result;
+}
+
+void Configuration::cleanUpdates(const uint32_t id)
+{
+	std::map<const uint32_t, ConfigurationEntry *>::iterator it = this->entries.find(id);
+
+	if (it != this->entries.end()) {
+		it->second->setValue(it->second->getPrevValue());
+	}
 }
 
 void Configuration::cleanUpdates(void)

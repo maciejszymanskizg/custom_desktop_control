@@ -32,8 +32,6 @@ void DummyInputController::generateRandomData(void)
 void DummyInputController::sync(IController::SyncDirection dir)
 {
 	conf->accessLock();
-	conf->dumpConfigUpdates();
-	conf->cleanUpdates();
 	generateRandomData();
 	conf->accessUnlock();
 }

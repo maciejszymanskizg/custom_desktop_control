@@ -42,6 +42,7 @@ struct MainParameters {
 	unsigned short input_port;
 	std::string output_ip;
 	unsigned short output_port;
+	bool log_changes;
 };
 
 struct MainOptions {
@@ -106,6 +107,7 @@ void printUsage(const char *name)
 	log_info("\t-p | --input-port    (optional) IP port for TCPIP connection in input engine\n");
 	log_info("\t-d | --output-ip     (optional) IP address for TCPIP connection in input engine\n");
 	log_info("\t-r | --output-port   (optional) IP port for TCPIP connection in input engine\n");
+	log_info("\t-l | --log-changes   (optional) Print configuration value changes\n");
 	log_info("\t-v | --version       (optional) print version string\n");
 	log_info("\t-h | --help          (optional) print help information\n");
 }
@@ -163,7 +165,7 @@ bool convertUARTBaudrate(unsigned int baud, UART::Baudrate & baudrate)
 
 bool parseParams(int argc, char *argv[], struct MainParameters & params)
 {
-	const char *getopt_string = "i:o:u:b:c:a:p:d:r:vh";
+	const char *getopt_string = "i:o:u:b:c:a:p:d:r:ilvh";
 	int c, opt_index;
 	bool result = true;
 
@@ -177,6 +179,7 @@ bool parseParams(int argc, char *argv[], struct MainParameters & params)
 		{ "input-port", required_argument, NULL, 'p' },
 		{ "output-ip", required_argument, NULL, 'd' },
 		{ "output-port", required_argument, NULL, 'r' },
+		{ "log-changes", no_argument, NULL, 'l' },
 		{ "version", no_argument, NULL, 'v' },
 		{ "help", no_argument, NULL, 'h' },
 		{ 0, 0, NULL, 0 },
@@ -297,6 +300,11 @@ bool parseParams(int argc, char *argv[], struct MainParameters & params)
 
 					break;
 				}
+			case 'l':
+				{
+					params.log_changes = true;
+					break;
+				}
 			case 'v':
 				{
 					printVersion();
@@ -412,12 +420,14 @@ void mainThreadFunc(struct MainOptions & options)
 	while (options.thread_running_flag) {
 		options.input_controller->sync(IController::SyncDirection::FROM_CONTROLLER);
 		options.output_controller->sync(IController::SyncDirection::TO_CONTROLLER);
-		options.configuration->dumpConfigUpdates();
+		if (options.params.log_changes)
+			options.configuration->dumpConfigUpdates();
 		options.configuration->cleanUpdates();
 
 		options.output_controller->sync(IController::SyncDirection::FROM_CONTROLLER);
 		options.input_controller->sync(IController::SyncDirection::TO_CONTROLLER);
-		options.configuration->dumpConfigUpdates();
+		if (options.params.log_changes)
+			options.configuration->dumpConfigUpdates();
 		options.configuration->cleanUpdates();
 
 		std::this_thread::sleep_for(std::chrono::microseconds(50));

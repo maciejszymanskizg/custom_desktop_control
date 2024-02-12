@@ -245,8 +245,7 @@ void MaszynaUART::writeUART(void)
 		(((getConfigValue(CONFIGURATION_ID_SWITCH_BREAK_MODE) == 1) & 0x1) << 1) |
 		(((getConfigValue(CONFIGURATION_ID_SWITCH_BREAK_MODE) == 2) & 0x1) << 2) |
 		(((getConfigValue(CONFIGURATION_ID_CONTROLLER_TRAIN_DIRECTION) == 1) & 0x1) << 3) |
-		(((getConfigValue(CONFIGURATION_ID_CONTROLLER_TRAIN_DIRECTION) == 0) & 0x1) << 4) |
-		(((getConfigValue(CONFIGURATION_ID_CONTROLLER_TRAIN_DIRECTION) == 2) & 0x1) << 5);
+		(((getConfigValue(CONFIGURATION_ID_CONTROLLER_TRAIN_DIRECTION) == 2) & 0x1) << 4);
 
 	/* byte 10 : master controller */
 	buffer[10] = getConfigValue(CONFIGURATION_ID_CONTROLLER_ADJUSTER_WHEEL_POSITION) & 0xff;

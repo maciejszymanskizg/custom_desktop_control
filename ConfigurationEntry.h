@@ -17,6 +17,8 @@ class ConfigurationEntry {
 		unsigned int getValue(void);
 		unsigned int getPrevValue(void);
 		bool setValue(unsigned int value);
+		bool isUpdated(void);
+		void cleanUpdate(void);
 };
 
 #endif /* CONFIGURATION_ENTRY_H */

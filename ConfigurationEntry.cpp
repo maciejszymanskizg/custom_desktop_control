@@ -38,3 +38,13 @@ bool ConfigurationEntry::setValue(unsigned int value)
 
 	return true;
 }
+
+bool ConfigurationEntry::isUpdated(void)
+{
+	return (bool) (this->curr_value != this->prev_value);
+}
+
+void ConfigurationEntry::cleanUpdate(void)
+{
+	this->prev_value = this->curr_value;
+}

@@ -15,6 +15,7 @@ TCPIP::TCPIP(enum TCPIP::Mode mode, const std::string & address, unsigned int po
 	this->port = port;
 	this->sockfd = socket(AF_INET, SOCK_STREAM, 0);
 	this->client_sockfd = -1;
+	this->connected = false;
 
 	if (this->sockfd == -1) {
 		log_error("Could not create socket.\n");
@@ -40,7 +41,6 @@ bool TCPIP::connectSocket(void)
 		goto err;
 	}
 
-	log_info("%s:%d\n", this->address.c_str(), this->port);
 	bzero(&addr, sizeof(addr));
 	addr.sin_family = AF_INET;
 	addr.sin_addr.s_addr = inet_addr(this->address.c_str());
@@ -72,6 +72,7 @@ bool TCPIP::connectSocket(void)
 		} else {
 			log_info("Connection with %s on port %u established (client sock_fd %d).\n", inet_ntoa(cli.sin_addr),
 					ntohs(cli.sin_port), this->client_sockfd);
+			this->connected = true;
 		}
 	} else {
 		if (connect(this->sockfd, (struct sockaddr *) &addr, sizeof(addr)) != 0) {
@@ -81,6 +82,7 @@ bool TCPIP::connectSocket(void)
 		} else {
 			log_info("Successfully connected to %s:%d.\n", inet_ntoa(addr.sin_addr),
 					ntohl(addr.sin_port));
+			this->connected = true;
 		}
 	}
 
@@ -103,11 +105,30 @@ ICommunicationHandler::HandlerType TCPIP::getHandlerType(void)
 ssize_t TCPIP::readData(uint8_t *buffer, size_t length)
 {
 	int fd = (this->mode == TCPIP_MODE_SERVER ? this->client_sockfd : this->sockfd);
-	return readFDData(fd, buffer, length);
+	ssize_t result = readFDData(fd, buffer, length);
+
+	if (result == 0) {
+		/* Connection closed by peer */
+		this->connected = false;
+	}
+
+	return result;
 }
 
 ssize_t TCPIP::writeData(const uint8_t *buffer, size_t length)
 {
 	int fd = (this->mode == TCPIP_MODE_SERVER ? this->client_sockfd : this->sockfd);
-	return writeFDData(fd, buffer, length);
+	ssize_t result = writeFDData(fd, buffer, length);
+
+	if (result == 0) {
+		/* Connection closed by peer */
+		this->connected = false;
+	}
+
+	return result;
+}
+
+bool TCPIP::isConnected(void)
+{
+	return this->connected;
 }

@@ -80,8 +80,9 @@ DataMessage *VirtEU07::receiveDataMessage(void)
 
 	memset(&header_buffer, 0, sizeof(DataMessage::MessageHeader));
 
-	if ((size_t) this->tcpip->readData(header_buffer, sizeof(DataMessage::MessageHeader)) ==
-			sizeof(DataMessage::MessageHeader)) {
+	if ((this->tcpip->isConnected()) &&
+			((size_t) this->tcpip->readData(header_buffer, sizeof(DataMessage::MessageHeader)) ==
+			sizeof(DataMessage::MessageHeader))) {
 		DataMessage::MessageHeader *header = (DataMessage::MessageHeader *) &header_buffer;
 
 		if (header->number_of_items > 0) {
@@ -93,7 +94,8 @@ DataMessage *VirtEU07::receiveDataMessage(void)
 				memset(buffer, 0, buffer_size);
 				memcpy(buffer, header_buffer, sizeof(DataMessage::MessageHeader));
 
-				if ((size_t) this->tcpip->readData(&buffer[sizeof(DataMessage::MessageHeader)], payload_size) == payload_size) {
+				if ((this->tcpip->isConnected()) &&
+						((size_t) this->tcpip->readData(&buffer[sizeof(DataMessage::MessageHeader)], payload_size) == payload_size)) {
 					result = new DataMessage(buffer, buffer_size);
 				} else {
 					log_error("Could not receive message payload.\n");
@@ -126,7 +128,8 @@ void VirtEU07::handleInput(void)
 	uint8_t *buffer = request->getRawData(size);
 
 	if (buffer != nullptr) {
-		if (this->tcpip->writeData(buffer, size) == (ssize_t) size) {
+		if ((this->tcpip->isConnected()) &&
+				(this->tcpip->writeData(buffer, size) == (ssize_t) size)) {
 			DataMessage *response = receiveDataMessage();
 
 			if (response != nullptr) {
@@ -159,7 +162,8 @@ void VirtEU07::handleOutput(void)
 		uint8_t *buffer = request->getRawData(size);
 
 		if (buffer != nullptr) {
-			if (this->tcpip->writeData(buffer, size) == (ssize_t) size) {
+			if ((this->tcpip->isConnected()) &&
+					(this->tcpip->writeData(buffer, size) == (ssize_t) size)) {
 				DataMessage *response = receiveDataMessage();
 
 				if (response != nullptr) {

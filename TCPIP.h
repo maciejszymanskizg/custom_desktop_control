@@ -20,12 +20,15 @@ class TCPIP : public ICommunicationHandler, FDOperations {
 		virtual ssize_t readData(uint8_t *buffer, size_t length);
 		virtual ssize_t writeData(const uint8_t *buffer, size_t length);
 
+		bool isConnected(void);
+
 	private:
 		enum Mode mode;
 		int sockfd;
 		int client_sockfd;
 		std::string address;
 		unsigned int port;
+		bool connected;
 };
 
 #endif /* TCPIP_H */

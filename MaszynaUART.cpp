@@ -256,11 +256,11 @@ void MaszynaUART::writeUART(void)
 
 	/* byte 12 - 13 : train break */
 	buffer[12] = (getConfigValue(CONFIGURATION_ID_MAIN_BREAK_VALUE) & 0xff);
-	buffer[13] = ((getConfigValue(CONFIGURATION_ID_MAIN_BREAK_VALUE) & 0xff) << 8);
+	buffer[13] = ((getConfigValue(CONFIGURATION_ID_MAIN_BREAK_VALUE) >> 8) & 0xff);
 
 	/* byte 14 - 15 : locomotive break */
 	buffer[14] = (getConfigValue(CONFIGURATION_ID_LOC_BREAK_VALUE) & 0xff);
-	buffer[15] = ((getConfigValue(CONFIGURATION_ID_LOC_BREAK_VALUE) & 0xff) << 8);
+	buffer[15] = ((getConfigValue(CONFIGURATION_ID_LOC_BREAK_VALUE) >> 8) & 0xff);
 
 	/* byte 16 : radio controll */
 	buffer[16] = 0xF0 /* max volume */ | (getConfigValue(CONFIGURATION_ID_SWITCH_RADIO_CHANNEL) & 0xf);

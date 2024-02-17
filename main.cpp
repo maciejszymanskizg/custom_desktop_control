@@ -18,6 +18,7 @@
 #include "UART.h"
 #include "TCPIP.h"
 #include "VirtEU07.h"
+#include "PhysEU07.h"
 
 enum InputControllerType {
 	INPUT_CONTROLLER_TYPE_UNKNOWN,
@@ -204,7 +205,7 @@ bool parseParams(int argc, char *argv[], struct MainParameters & params)
 				{
 					if (strcmp(optarg, "virt-eu07-tcpip") == 0) {
 						params.outputControllerType = OUTPUT_CONTROLLER_TYPE_VIRT_EU07_TCPIP;
-					} else if (strcmp(optarg, "phys-eu07-tcpip") == 0) {
+					} else if (strcmp(optarg, "phys-eu07-i2c") == 0) {
 						params.outputControllerType = OUTPUT_CONTROLLER_TYPE_PHYS_EU07_I2C;
 					} else if (strcmp(optarg, "dummy") == 0) {
 						params.outputControllerType = OUTPUT_CONTROLLER_TYPE_DUMMY;
@@ -377,7 +378,7 @@ bool setup(struct MainOptions & options)
 	} else if (options.params.outputControllerType == OUTPUT_CONTROLLER_TYPE_PHYS_EU07_I2C) {
 		if (options.params.i2c_node.size() > 0) {
 			options.i2c_handler = new I2C(options.params.i2c_node);
-			/* TODO : options.output_controller = new PhysEU07(options.i2c_handler, options.configuration); */
+			options.output_controller = new PhysEU07(options.configuration, options.i2c_handler);
 		} else {
 			log_error("I2C node of output controller not specified.\n");
 			goto out;

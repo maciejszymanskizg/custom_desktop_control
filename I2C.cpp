@@ -28,7 +28,7 @@ I2C::~I2C()
 
 int I2C::setSlaveAddr(uint8_t addr)
 {
-	int res = ioctl(fd, I2C_SLAVE, addr >> 1);
+	int res = ioctl(fd, I2C_SLAVE, addr);
 
 	if (res == -1) {
 		log_error("Could not set slave address to 0x%x : %s\n", addr, strerror(errno));

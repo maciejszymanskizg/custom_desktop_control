@@ -15,7 +15,7 @@ PCF8575::PCF8575(ICommunicationHandler *ch, uint8_t a0, uint8_t a1, uint8_t a2)
 		return;
 	}
 
-	addr = (uint8_t) 0x40 | (!!a0 << 1) | (!!a1 << 2) | (!!a2 << 3);
+	addr = (uint8_t) 0x20 | (!!a0 << 1) | (!!a1 << 2) | (!!a2 << 3);
 	i2c = dynamic_cast<I2C *>(ch);
 }
 

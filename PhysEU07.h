@@ -14,6 +14,7 @@ class PhysEU07 : public IController {
 		void I2CToConfig(void);
 
 		void read_0x40(void);
+		void write_0x42(void);
 	public:
 		PhysEU07(Configuration *conf, ICommunicationHandler *handler);
 		virtual ~PhysEU07();

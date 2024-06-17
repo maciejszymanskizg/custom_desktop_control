@@ -11,12 +11,25 @@
 #define FIXED_DATA_BUFFER_SIZE_2_VALUES 7
 #define FIXED_DATA_BUFFER_SIZE_3_VALUES 9
 
-PhysEU07::PhysEU07(Configuration *conf, ICommunicationHandler *handler) : IController(ControllerType::PHYS_CONTROLLER)
+PhysEU07::PhysEU07(Configuration *train_conf, Configuration *global_conf, ICommunicationHandler *handler) : IController(ControllerType::PHYS_CONTROLLER)
 {
 	this->conf = conf;
+	this->global_conf = global_conf;
 	this->i2c = dynamic_cast<I2C *>(handler);
 	if (this->i2c == nullptr) {
 		log_error("Invalid communication handler.\n");
+	} else {
+		pcf8575_0x20 = new PCF8575(handler, 0, 0, 0);
+		pcf8575_0x21 = new PCF8575(handler, 0, 0, 1);
+		pcf8575_0x22 = new PCF8575(handler, 0, 1, 0);
+		pcf8575_0x23 = new PCF8575(handler, 0, 1, 1);
+		pcf8575_0x24 = new PCF8575(handler, 1, 0, 0);
+
+		pcf8575_0x20->setup(0xffff);
+		pcf8575_0x21->setup(0xffff);
+		pcf8575_0x22->setup(0xffff);
+		pcf8575_0x23->setup(0xffff);
+		pcf8575_0x24->setup(0xffff);
 	}
 }
 

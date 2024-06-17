@@ -11,6 +11,7 @@
 #include <chrono>
 #include "Logger.h"
 #include "TrainConfiguration.h"
+#include "GlobalConfiguration.h"
 #include "MaszynaUART.h"
 #include "DummyInputController.h"
 #include "DummyOutputController.h"
@@ -54,13 +55,14 @@ struct MainOptions {
 	ICommunicationHandler *tcpip_output_handler;
 	IController *input_controller;
 	IController *output_controller;
-	Configuration *configuration;
+	Configuration *train_configuration;
+	Configuration *global_configuration;
 	std::thread *main_thread;
 	bool thread_running_flag;
 };
 
 IController *createMaszynaUARTInputController(ICommunicationHandler *communication_handler,
-		Configuration *configuration)
+		Configuration *train_configuration)
 {
 	IController *ret = nullptr;
 
@@ -71,12 +73,12 @@ IController *createMaszynaUARTInputController(ICommunicationHandler *communicati
 		goto out;
 	}
 
-	if (configuration == nullptr) {
-		log_error("Invalid configuration\n");
+	if (train_configuration == nullptr) {
+		log_error("Invalid train configuration\n");
 		goto out;
 	}
 
-	ret = new MaszynaUART(communication_handler, configuration);
+	ret = new MaszynaUART(communication_handler, train_configuration);
 
 out:
 	return ret;
@@ -335,7 +337,8 @@ void clearOptions(struct MainOptions & options)
 	options.params.uart_baudrate = UART::Baudrate::BAUDRATE_9600;
 	options.params.input_port = USHRT_MAX;
 	options.params.output_port = USHRT_MAX;
-	options.configuration = new TrainConfiguration();
+	options.train_configuration = new TrainConfiguration();
+	options.global_configuration = new GlobalConfiguration();
 	options.input_controller = nullptr;
 	options.output_controller = nullptr;
 	options.main_thread = nullptr;
@@ -349,13 +352,13 @@ bool setup(struct MainOptions & options)
 	if (options.params.inputControllerType == INPUT_CONTROLLER_TYPE_MASZYNA_UART) {
 		if (options.params.uart_node.size() > 0) {
 			options.uart_handler = new UART(options.params.uart_node, options.params.uart_baudrate);
-			options.input_controller = new MaszynaUART(options.uart_handler, options.configuration);
+			options.input_controller = new MaszynaUART(options.uart_handler, options.train_configuration);
 		} else {
 			log_error("UART device not specified.\n");
 			goto out;
 		}
 	} else if (options.params.inputControllerType == INPUT_CONTROLLER_TYPE_DUMMY) {
-		options.input_controller = new DummyInputController(options.configuration);
+		options.input_controller = new DummyInputController(options.train_configuration);
 	} else {
 		log_error("Input controller not specified.\n");
 		goto out;
@@ -366,7 +369,7 @@ bool setup(struct MainOptions & options)
 			if (options.params.output_port != USHRT_MAX) {
 				options.tcpip_output_handler = new TCPIP(TCPIP::Mode::TCPIP_MODE_SERVER,
 						options.params.output_ip, options.params.output_port);
-				options.output_controller = new VirtEU07(options.configuration, dynamic_cast<TCPIP *>(options.tcpip_output_handler));
+				options.output_controller = new VirtEU07(options.train_configuration, dynamic_cast<TCPIP *>(options.tcpip_output_handler));
 			} else {
 				log_error("TCPIP port of output controller not specified.\n");
 				goto out;
@@ -378,13 +381,13 @@ bool setup(struct MainOptions & options)
 	} else if (options.params.outputControllerType == OUTPUT_CONTROLLER_TYPE_PHYS_EU07_I2C) {
 		if (options.params.i2c_node.size() > 0) {
 			options.i2c_handler = new I2C(options.params.i2c_node);
-			options.output_controller = new PhysEU07(options.configuration, options.i2c_handler);
+			options.output_controller = new PhysEU07(options.train_configuration, options.global_configuration, options.i2c_handler);
 		} else {
 			log_error("I2C node of output controller not specified.\n");
 			goto out;
 		}
 	} else if (options.params.outputControllerType == OUTPUT_CONTROLLER_TYPE_DUMMY) {
-		options.output_controller = new DummyOutputController(options.configuration);
+		options.output_controller = new DummyOutputController(options.train_configuration);
 	} else {
 		log_error("Output controller not specified.\n");
 		goto out;
@@ -404,8 +407,11 @@ void freeOptions(struct MainOptions & options)
 	if (options.output_controller != nullptr)
 		delete options.output_controller;
 
-	if (options.configuration != nullptr)
-		delete options.configuration;
+	if (options.train_configuration != nullptr)
+		delete options.train_configuration;
+
+	if (options.global_configuration != nullptr)
+		delete options.global_configuration;
 
 	if (options.main_thread != nullptr) {
 		options.thread_running_flag = false;
@@ -422,14 +428,14 @@ void mainThreadFunc(struct MainOptions & options)
 		options.input_controller->sync(IController::SyncDirection::FROM_CONTROLLER);
 		options.output_controller->sync(IController::SyncDirection::TO_CONTROLLER);
 		if (options.params.log_changes)
-			options.configuration->dumpConfigUpdates();
-		options.configuration->cleanUpdates();
+			options.train_configuration->dumpConfigUpdates();
+		options.train_configuration->cleanUpdates();
 
 		options.output_controller->sync(IController::SyncDirection::FROM_CONTROLLER);
 		options.input_controller->sync(IController::SyncDirection::TO_CONTROLLER);
 		if (options.params.log_changes)
-			options.configuration->dumpConfigUpdates();
-		options.configuration->cleanUpdates();
+			options.train_configuration->dumpConfigUpdates();
+		options.train_configuration->cleanUpdates();
 
 		std::this_thread::sleep_for(std::chrono::milliseconds(50));
 	}

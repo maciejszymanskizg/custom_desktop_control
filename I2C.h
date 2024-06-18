@@ -16,7 +16,7 @@ class I2C : public ICommunicationHandler
 		ssize_t writeSMBusData(const uint8_t *buffer, size_t length);
 
 	public:
-		I2C(const std::string & path);
+		I2C(const char *path);
 		virtual ~I2C();
 
 		int setSlaveAddr(uint8_t addr);

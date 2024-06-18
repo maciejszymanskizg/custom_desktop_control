@@ -5,15 +5,16 @@
 
 class ConfigurationEntry {
 	private:
-		std::string name;
+		char *name;
 		unsigned int curr_value;
 		unsigned int prev_value;
 		unsigned int min_value;
 		unsigned int max_value;
 
 	public:
-		ConfigurationEntry(const std::string & name, unsigned int min_value, unsigned int max_value, unsigned int init_value);
-		std::string & getName(void);
+		ConfigurationEntry(const char *name, unsigned int min_value, unsigned int max_value, unsigned int init_value);
+		~ConfigurationEntry();
+		const char *getName(void);
 		unsigned int getValue(void);
 		unsigned int getPrevValue(void);
 		bool setValue(unsigned int value);

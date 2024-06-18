@@ -8,10 +8,10 @@
 #include "TCPIP.h"
 #include "Logger.h"
 
-TCPIP::TCPIP(enum TCPIP::Mode mode, const std::string & address, unsigned int port)
+TCPIP::TCPIP(enum TCPIP::Mode mode, const char *address, unsigned int port)
 {
 	this->mode = mode;
-	this->address = address;
+	this->address = strdup(address);
 	this->port = port;
 	this->sockfd = socket(AF_INET, SOCK_STREAM, 0);
 	this->client_sockfd = -1;
@@ -29,6 +29,8 @@ TCPIP::~TCPIP()
 
 	if (this->client_sockfd != -1)
 		close(this->client_sockfd);
+
+	free(this->address);
 }
 
 bool TCPIP::connectSocket(void)
@@ -43,7 +45,7 @@ bool TCPIP::connectSocket(void)
 
 	bzero(&addr, sizeof(addr));
 	addr.sin_family = AF_INET;
-	addr.sin_addr.s_addr = inet_addr(this->address.c_str());
+	addr.sin_addr.s_addr = inet_addr(this->address);
 	addr.sin_port = htons(this->port);
 
 	if (mode == TCPIP_MODE_SERVER) {

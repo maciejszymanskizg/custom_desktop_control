@@ -12,6 +12,7 @@
 #include "Logger.h"
 #include "TrainConfiguration.h"
 #include "GlobalConfiguration.h"
+#include "GlobalConfigurationIDs.h"
 #include "MaszynaUART.h"
 #include "DummyInputController.h"
 #include "DummyOutputController.h"
@@ -423,6 +424,7 @@ void freeOptions(struct MainOptions & options)
 void mainThreadFunc(struct MainOptions & options)
 {
 	log_debug("Starting main thread.\n");
+	unsigned int wait_ms = options.global_configuration->getValue(CONFIGURATION_ID_MAIN_THREAD_SLEEP_MS);
 
 	while (options.thread_running_flag) {
 		options.input_controller->sync(IController::SyncDirection::FROM_CONTROLLER);
@@ -437,7 +439,7 @@ void mainThreadFunc(struct MainOptions & options)
 			options.train_configuration->dumpConfigUpdates();
 		options.train_configuration->cleanUpdates();
 
-		std::this_thread::sleep_for(std::chrono::milliseconds(50));
+		std::this_thread::sleep_for(std::chrono::milliseconds(wait_ms));
 	}
 }
 
@@ -454,6 +456,7 @@ int main(int argc, char *argv[])
 {
 	int status = EXIT_FAILURE;
 	struct MainOptions options;
+	unsigned int wait_ms;
 
 	clearOptions(options);
 
@@ -473,8 +476,10 @@ int main(int argc, char *argv[])
 		goto out;
 	}
 
+	wait_ms = options.global_configuration->getValue(CONFIGURATION_ID_MAIN_THREAD_SLEEP_MS);
+
 	while (keep_running) {
-		std::this_thread::sleep_for(std::chrono::microseconds(25));
+		std::this_thread::sleep_for(std::chrono::milliseconds(wait_ms));
 	}
 
 	options.thread_running_flag = false;

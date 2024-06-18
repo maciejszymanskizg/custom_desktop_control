@@ -15,7 +15,7 @@ PCF8575::PCF8575(ICommunicationHandler *ch, uint8_t a0, uint8_t a1, uint8_t a2)
 		return;
 	}
 
-	addr = (uint8_t) 0x20 | (!!a0 << 1) | (!!a1 << 2) | (!!a2 << 3);
+	addr = (uint8_t) 0x20 | (!!a0 << 0) | (!!a1 << 1) | (!!a2 << 2);
 	i2c = dynamic_cast<I2C *>(ch);
 }
 
@@ -42,15 +42,15 @@ void PCF8575::setup(const uint16_t & _mask)
 	res = i2c->writeData((const uint8_t *) &mask, sizeof(mask));
 	if (res == -1) {
 		log_error("Error in writing mask to I2c device : %s\n", strerror(errno));
+	} else {
+		value = _mask;
 	}
-
-	value = _mask;
 }
 
 int PCF8575::writeData(const uint16_t & data)
 {
 	int res = 0;
-	uint16_t to_write = data & mask;
+	uint16_t to_write = data;
 
 	if (i2c->setSlaveAddr(addr) != 0) {
 		res = -1;
@@ -117,12 +117,8 @@ PCF8575::PinState PCF8575::getInput(PCF8575::Pin pin)
 
 void PCF8575::setOutput(Pin pin, PinState state)
 {
-	if (mask & (1 << shiftFromPin(pin))) {
-		log_error("Requested bit is not configured as output");
-	} else {
-		value &= ~(1 << shiftFromPin(pin));
-		if (state == PinStateHigh) {
-			value |= (1 << shiftFromPin(pin));
-		}
+	value &= ~(1 << shiftFromPin(pin));
+	if (state == PinStateHigh) {
+		value |= (1 << shiftFromPin(pin));
 	}
 }

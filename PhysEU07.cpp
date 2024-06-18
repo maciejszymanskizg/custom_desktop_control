@@ -27,10 +27,10 @@ PhysEU07::PhysEU07(Configuration *train_conf, Configuration *global_conf, ICommu
 		log_error("Invalid communication handler.\n");
 	} else {
 		pcf8575_0x20 = new PCF8575(handler, 0, 0, 0);
-		pcf8575_0x21 = new PCF8575(handler, 0, 0, 1);
+		pcf8575_0x21 = new PCF8575(handler, 1, 0, 0);
 		pcf8575_0x22 = new PCF8575(handler, 0, 1, 0);
-		pcf8575_0x23 = new PCF8575(handler, 0, 1, 1);
-		pcf8575_0x24 = new PCF8575(handler, 1, 0, 0);
+		pcf8575_0x23 = new PCF8575(handler, 1, 1, 0);
+		pcf8575_0x24 = new PCF8575(handler, 0, 0, 1);
 
 		pcf8575_0x20->setup(0xffff);
 		pcf8575_0x21->setup(0xffff);
@@ -109,18 +109,6 @@ void PhysEU07::read_0x22(void)
 		(pcf8575_0x22->getInput(PCF8575::PIN_P13) == PCF8575::PinStateLow) ? 2 : 1;
 
 	conf->setValue(CONFIGURATION_ID_SWITCH_BREAK_MODE, value);
-}
-
-void PhysEU07::read_0x23(void)
-{
-#if 0
-	pcf8575_0x23->sync(PCF8575::SYNC_FROM_PCF8575);
-
-	PIN_TO_CONFIG(pcf8575_0x23, 10, conf, CONFIGURATION_ID_SWITCH_MEASURE_INSTRUMENT_LIGHT_DIMM);
-	PIN_TO_CONFIG(pcf8575_0x23, 11, conf, CONFIGURATION_ID_SWITCH_MEASURE_INSTRUMENT_LIGHT);
-
-	PIN_TO_CONFIG(pcf8575_0x23, 17, conf, CONFIGURATION_ID_SWITCH_CABIN_LIGHT);
-#endif
 }
 
 void PhysEU07::read_0x24(void)
@@ -251,6 +239,16 @@ void PhysEU07::write_0x20(void)
 	pcf8575_0x20->sync(PCF8575::SYNC_TO_PCF8575);
 }
 
+void PhysEU07::write_0x23(void)
+{
+	CONFIG_TO_PIN(conf, CONFIGURATION_ID_SWITCH_MEASURE_INSTRUMENT_LIGHT_DIMM, pcf8575_0x23, 10);
+	CONFIG_TO_PIN(conf, CONFIGURATION_ID_SWITCH_MEASURE_INSTRUMENT_LIGHT, pcf8575_0x23, 11);
+
+	CONFIG_TO_PIN(conf, CONFIGURATION_ID_SWITCH_CABIN_LIGHT, pcf8575_0x23, 17);
+
+	pcf8575_0x23->sync(PCF8575::SYNC_TO_PCF8575);
+}
+
 void PhysEU07::write_0x42(void)
 {
 	if (i2c->setSlaveAddr(0x42)) {
@@ -363,7 +361,6 @@ void PhysEU07::I2CToConfig(void)
 {
 	read_0x21();
 	read_0x22();
-	read_0x23();
 	read_0x24();
 	read_0x40();
 }
@@ -375,4 +372,5 @@ void PhysEU07::configToI2C(void)
 	write_0x44();
 	write_0x45();
 	write_0x20();
+	write_0x23();
 }

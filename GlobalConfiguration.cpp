@@ -2,14 +2,21 @@
 #include "GlobalConfigurationIDs.h"
 #include "Logger.h"
 
-#define GLOBAL_CONFIGURATION_ENTRY(_id, _name) \
+#define GLOBAL_CONFIGURATION_ENTRY(_id, _name, _min, _max, _init) \
 	{ \
 		.id = _id, \
-		.name = _name \
+		.name = _name, \
+		.min = _min, \
+		.max = _max, \
+		.init = _init \
 	}
 
+#define GLOBAL_CONFIGURATION_ENTRY_BOOL(_id, _name, _init) GLOBAL_CONFIGURATION_ENTRY(_id, _name, 0, 1, _init)
+
 struct GlobalConfigurationEntry Global_Configuration[] = {
-	GLOBAL_CONFIGURATION_ENTRY(CONFIGURATION_ID_AUTO_BLINK_SHP, "Auto blink SHP"),
+	GLOBAL_CONFIGURATION_ENTRY(CONFIGURATION_ID_MAIN_THREAD_SLEEP_MS, "Main thread sleep ms", 0, 1000, 50),
+	GLOBAL_CONFIGURATION_ENTRY_BOOL(CONFIGURATION_ID_AUTO_BLINK_ALERTER, "Auto blink alerter", 0),
+	GLOBAL_CONFIGURATION_ENTRY(CONFIGURATION_ID_AUTO_BLINK_ALERTER_MS, "Auto blink alerter ms", 0, 1000, 500),
 };
 
 GlobalConfiguration::GlobalConfiguration() : Configuration("Global Configuration")

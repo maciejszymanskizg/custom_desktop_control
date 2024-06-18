@@ -43,6 +43,8 @@ void PCF8575::setup(const uint16_t & _mask)
 	if (res == -1) {
 		log_error("Error in writing mask to I2c device : %s\n", strerror(errno));
 	}
+
+	value = _mask;
 }
 
 int PCF8575::writeData(const uint16_t & data)

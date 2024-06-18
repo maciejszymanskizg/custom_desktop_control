@@ -9,12 +9,12 @@
 #include "I2C.h"
 #include "Logger.h"
 
-I2C::I2C(const std::string & path)
+I2C::I2C(const char *path)
 {
-	fd = open(path.c_str(), O_RDWR);
+	fd = open(path, O_RDWR);
 
 	if (fd == -1) {
-		log_error("Could not open i2c device [%s] : %s\n", path.c_str(), strerror(errno));
+		log_error("Could not open i2c device [%s] : %s\n", path, strerror(errno));
 	}
 
 	this->use_smbus = false;

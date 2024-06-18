@@ -18,7 +18,7 @@ class UART : public ICommunicationHandler, FDOperations {
 			BAUDRATE_460800
 		};
 
-		UART(const std::string & device, Baudrate baudrate);
+		UART(const char *device, Baudrate baudrate);
 		virtual ~UART();
 
 		virtual HandlerType getHandlerType(void);

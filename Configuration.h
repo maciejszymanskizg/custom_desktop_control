@@ -9,19 +9,19 @@
 
 class Configuration {
 	private:
-		std::string name;
-		std::map<const uint32_t, ConfigurationEntry *> entries;
-		Mutex mutex;
+		char *name;
+		std::map<const uint32_t, ConfigurationEntry *> *entries;
+		Mutex *mutex;
 
 	protected:
 		bool addConfigurationEntry(const uint32_t id, ConfigurationEntry *entry);
 	public:
 		const uint32_t CONFIGURATION_INVALID_VALUE = (uint32_t) -1;
 
-		Configuration(const std::string & name);
+		Configuration(const char *name);
 		~Configuration();
 
-		std::string & getName(void);
+		const char *getName(void);
 		ConfigurationEntry *getEntry(const uint32_t id);
 		bool setValue(const uint32_t id, uint32_t value);
 		bool getValue(const uint32_t id, uint32_t & value);

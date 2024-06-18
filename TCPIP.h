@@ -12,7 +12,7 @@ class TCPIP : public ICommunicationHandler, FDOperations {
 			TCPIP_MODE_CLIENT
 		};
 
-		TCPIP(enum Mode mode, const std::string & address, unsigned int port);
+		TCPIP(enum Mode mode, const char *address, unsigned int port);
 		virtual ~TCPIP();
 		bool connectSocket(void);
 
@@ -26,7 +26,7 @@ class TCPIP : public ICommunicationHandler, FDOperations {
 		enum Mode mode;
 		int sockfd;
 		int client_sockfd;
-		std::string address;
+		char *address;
 		unsigned int port;
 		bool connected;
 };

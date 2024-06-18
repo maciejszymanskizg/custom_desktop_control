@@ -352,7 +352,7 @@ bool setup(struct MainOptions & options)
 
 	if (options.params.inputControllerType == INPUT_CONTROLLER_TYPE_MASZYNA_UART) {
 		if (options.params.uart_node.size() > 0) {
-			options.uart_handler = new UART(options.params.uart_node, options.params.uart_baudrate);
+			options.uart_handler = new UART(options.params.uart_node.c_str(), options.params.uart_baudrate);
 			options.input_controller = new MaszynaUART(options.uart_handler, options.train_configuration);
 		} else {
 			log_error("UART device not specified.\n");
@@ -369,7 +369,7 @@ bool setup(struct MainOptions & options)
 		if (options.params.output_ip.size() > 0) {
 			if (options.params.output_port != USHRT_MAX) {
 				options.tcpip_output_handler = new TCPIP(TCPIP::Mode::TCPIP_MODE_SERVER,
-						options.params.output_ip, options.params.output_port);
+						options.params.output_ip.c_str(), options.params.output_port);
 				options.output_controller = new VirtEU07(options.train_configuration, dynamic_cast<TCPIP *>(options.tcpip_output_handler));
 			} else {
 				log_error("TCPIP port of output controller not specified.\n");
@@ -381,7 +381,7 @@ bool setup(struct MainOptions & options)
 		}
 	} else if (options.params.outputControllerType == OUTPUT_CONTROLLER_TYPE_PHYS_EU07_I2C) {
 		if (options.params.i2c_node.size() > 0) {
-			options.i2c_handler = new I2C(options.params.i2c_node);
+			options.i2c_handler = new I2C(options.params.i2c_node.c_str());
 			options.output_controller = new PhysEU07(options.train_configuration, options.global_configuration, options.i2c_handler);
 		} else {
 			log_error("I2C node of output controller not specified.\n");
@@ -483,6 +483,7 @@ int main(int argc, char *argv[])
 	}
 
 	options.thread_running_flag = false;
+	options.main_thread->join();
 	status = EXIT_SUCCESS;
 
 out:

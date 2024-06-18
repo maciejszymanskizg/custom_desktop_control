@@ -42,11 +42,11 @@ speed_t BaudrateToSpeed(UART::Baudrate baudrate)
 	return speed;
 }
 
-UART::UART(const std::string & device, UART::Baudrate baudrate)
+UART::UART(const char *device, UART::Baudrate baudrate)
 {
-	this->fd = open(device.c_str(), O_RDWR | O_NOCTTY | O_NDELAY);
+	this->fd = open(device, O_RDWR | O_NOCTTY | O_NDELAY);
 	if (this->fd == -1) {
-		log_error("Could not open UART device [%s] : %s\n", device.c_str(), strerror(errno));
+		log_error("Could not open UART device [%s] : %s\n", device, strerror(errno));
 	} else {
 		struct termios options;
 

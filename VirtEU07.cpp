@@ -185,13 +185,9 @@ void VirtEU07::handleOutput(void)
 
 void VirtEU07::sync(IController::SyncDirection direction)
 {
-	this->conf->accessLock();
-
 	if (direction == IController::SyncDirection::FROM_CONTROLLER) {
 		handleInput();
 	} else {
 		handleOutput();
 	}
-
-	this->conf->accessUnlock();
 }

@@ -3,7 +3,6 @@
 
 #include <stdint.h>
 #include <sys/types.h>
-#include <string>
 #include "ICommunicationHandler.h"
 
 class I2C : public ICommunicationHandler

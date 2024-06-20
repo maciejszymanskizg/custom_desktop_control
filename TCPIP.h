@@ -1,7 +1,6 @@
 #ifndef TCPIP_H
 #define TCPIP_H
 
-#include <string>
 #include "ICommunicationHandler.h"
 #include "FDOperations.h"
 
@@ -26,7 +25,7 @@ class TCPIP : public ICommunicationHandler, FDOperations {
 		enum Mode mode;
 		int sockfd;
 		int client_sockfd;
-		char *address;
+		const char *address;
 		unsigned int port;
 		bool connected;
 };

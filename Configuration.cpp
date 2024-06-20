@@ -3,56 +3,51 @@
 #include "Configuration.h"
 #include "Logger.h"
 
-Configuration::Configuration(const char *name)
+Configuration::Configuration(const char *name, uint32_t size)
 {
-	this->name = strdup(name);
-	this->mutex = new Mutex();
-	this->entries = new std::map<const uint32_t, ConfigurationEntry*>();
+	//log_debug("%s() %p\n", __func__, this);
+	this->name = name;
+	this->entries = new ConfigurationEntry *[size];
+	if (this->entries != nullptr) {
+		for (uint32_t i = 0; i < size; i++)
+			this->entries[i] = nullptr;
+
+		this->entries_count = size;
+	} else {
+		log_error("Could not allocate memory for %u configuration entries\n", size);
+	}
 }
 
 Configuration::~Configuration()
 {
-	std::map<const uint32_t, ConfigurationEntry *>::iterator it;
-	ConfigurationEntry *e;
-
-	while (this->entries->size() > 0) {
-		e = this->entries->begin()->second;
-		this->entries->erase(this->entries->begin());
-		delete e;
+	//log_debug("%s() %p\n", __func__, this);
+	for (uint32_t i = 0; i < this->entries_count; i++) {
+		if (this->entries[i] != nullptr) {
+			ConfigurationEntry *entry = this->entries[i];
+			delete entry;
+		}
 	}
-
-	free(name);
-	delete entries;
-	delete mutex;
+	delete [] this->entries;
 }
 
 bool Configuration::addConfigurationEntry(const uint32_t id, ConfigurationEntry *entry)
 {
-	if (entry == nullptr)
+	if ((id >= this->entries_count) || (entry == nullptr))
 		return false;
 
-	std::map<const uint32_t, ConfigurationEntry *>::iterator it =
-		this->entries->find(id);
-
-	if (it != this->entries->end()) {
+	if (this->entries[id] != nullptr) {
 		log_error("%s: Entry with name %s already exists.\n", __func__,
 			entry->getName());
 		return false;
 	}
 
-	this->entries->insert({id, entry});
+	this->entries[id] = entry;
 	return true;
 }
 
 ConfigurationEntry *Configuration::getEntry(const uint32_t id)
 {
-	std::map<const uint32_t, ConfigurationEntry *>::iterator it =
-		this->entries->find(id);
-
-	if (it == this->entries->end())
-		return nullptr;
-	else
-		return it->second;
+	return (id < this->entries_count ? this->entries[id] : nullptr);
 }
 
 const char *Configuration::getName(void)
@@ -62,68 +57,61 @@ const char *Configuration::getName(void)
 
 bool Configuration::setValue(const uint32_t id, uint32_t value)
 {
-	ConfigurationEntry *entry = getEntry(id);
+	if ((id < this->entries_count) && (this->entries[id] != nullptr)) {
+		return this->entries[id]->setValue(value);
+	}
 
-	if (entry == nullptr)
-		return false;
-
-	return entry->setValue(value);
+	return false;
 }
 
 bool Configuration::getValue(const uint32_t id, uint32_t & value)
 {
-	ConfigurationEntry *entry = getEntry(id);
+	if ((id < this->entries_count) && (this->entries[id] != nullptr)) {
+		value = this->entries[id]->getValue();
+		return true;
+	}
 
-	if (entry == nullptr)
-		return false;
-
-	value = entry->getValue();
-	return true;
+	return false;
 }
 
 uint32_t Configuration::getValue(const uint32_t id)
 {
-	ConfigurationEntry *entry = getEntry(id);
+	uint32_t value = CONFIGURATION_INVALID_VALUE;
 
-	return (entry ? entry->getValue() : CONFIGURATION_INVALID_VALUE);
+	if ((id < this->entries_count) && (this->entries[id] != nullptr)) {
+		value = this->entries[id]->getValue();
+	}
+
+	return value;
 }
 
 bool Configuration::isUpdated(const uint32_t id)
 {
-	ConfigurationEntry *entry = getEntry(id);
+	if ((id < this->entries_count) && (this->entries[id] != nullptr)) {
+		return this->entries[id]->isUpdated();
+	}
 
-	return (entry ? entry->isUpdated() : false);
-}
-
-void Configuration::accessLock(void)
-{
-	this->mutex->lock();
-}
-
-void Configuration::accessUnlock(void)
-{
-	this->mutex->unlock();
+	return false;
 }
 
 void Configuration::dumpConfig(void)
 {
-	std::map<const uint32_t, ConfigurationEntry *>::iterator it;
-
-	for (it = this->entries->begin(); it != this->entries->end(); it++) {
-		log_debug("[0x%08x] [%s] : %u\n", it->first, it->second->getName(),
-				it->second->getValue());
+	for (uint32_t i = 0; i < this->entries_count; i++) {
+		if (this->entries[i] != nullptr) {
+			log_debug("[0x%08x] [%s] : %u\n", i, this->entries[i]->getName(),
+				this->entries[i]->getValue());
+		}
 	}
 }
 
 bool Configuration::dumpConfigUpdates(void)
 {
 	bool result = false;
-	std::map<const uint32_t, ConfigurationEntry *>::iterator it;
 
-	for (it = this->entries->begin(); it != this->entries->end(); it++) {
-		if (it->second->isUpdated()) {
-			log_debug("[0x%08x] [%s] : %u -> %u\n", it->first, it->second->getName(),
-					it->second->getPrevValue(), it->second->getValue());
+	for (uint32_t i = 0; i < this->entries_count; i++) {
+		if ((this->entries[i] != nullptr) && (this->entries[i]->isUpdated())) {
+			log_debug("[0x%08x] [%s] : %u\n", i, this->entries[i]->getName(),
+				this->entries[i]->getValue());
 
 			result = true;
 		}
@@ -134,37 +122,40 @@ bool Configuration::dumpConfigUpdates(void)
 
 void Configuration::cleanUpdates(const uint32_t id)
 {
-	std::map<const uint32_t, ConfigurationEntry *>::iterator it = this->entries->find(id);
-
-	if ((it != this->entries->end()) && (it->second->isUpdated())) {
-		it->second->cleanUpdate();
+	if ((id < this->entries_count) && (this->entries[id] != nullptr)) {
+		this->entries[id]->cleanUpdate();
 	}
 }
 
 void Configuration::cleanUpdates(void)
 {
-	std::map<const uint32_t, ConfigurationEntry *>::iterator it;
-
-	for (it = this->entries->begin(); it != this->entries->end(); it++) {
-		if (it->second->isUpdated()) {
-			it->second->cleanUpdate();
+	for (uint32_t i = 0; i < this->entries_count; i++) {
+		if ((this->entries[i] != nullptr) && (this->entries[i]->isUpdated())) {
+			this->entries[i]->cleanUpdate();
 		}
 	}
 }
 
-bool Configuration::checkUpdates(const uint32_t *ids, size_t elems)
+bool Configuration::checkUpdates(const uint32_t *ids, uint32_t elems)
 {
 	bool result = false;
-	std::map<const uint32_t, ConfigurationEntry *>::iterator it;
 
 	for (uint32_t i = 0; i < (uint32_t) elems; i++) {
-		it = this->entries->find(ids[i]);
-
-		if ((it != this->entries->end()) && (it->second->isUpdated())) {
+		if ((ids[i] < this->entries_count) &&
+				(this->entries[ids[i]] != nullptr) &&
+				(this->entries[ids[i]]->isUpdated())) {
 			result = true;
 			break;
 		}
 	}
 
 	return result;
+}
+
+void Configuration::dumpPointers(void)
+{
+	for (uint32_t i = 0; i < (uint32_t) this->entries_count; i++) {
+		log_info("this->entries[%u] = %p\n", i,
+				this->entries[i]);
+	}
 }

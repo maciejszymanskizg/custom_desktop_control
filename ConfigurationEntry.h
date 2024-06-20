@@ -1,23 +1,23 @@
 #ifndef CONFIGURATION_ENTRY_H
 #define CONFIGURATION_ENTRY_H
 
-#include <string>
+#include <stdint.h>
 
 class ConfigurationEntry {
 	private:
-		char *name;
-		unsigned int curr_value;
-		unsigned int prev_value;
-		unsigned int min_value;
-		unsigned int max_value;
+		const char *name;
+		uint32_t curr_value;
+		uint32_t prev_value;
+		uint32_t min_value;
+		uint32_t max_value;
 
 	public:
-		ConfigurationEntry(const char *name, unsigned int min_value, unsigned int max_value, unsigned int init_value);
+		ConfigurationEntry(const char *name, uint32_t min_value, uint32_t max_value, uint32_t init_value);
 		~ConfigurationEntry();
 		const char *getName(void);
-		unsigned int getValue(void);
-		unsigned int getPrevValue(void);
-		bool setValue(unsigned int value);
+		uint32_t getValue(void);
+		uint32_t getPrevValue(void);
+		bool setValue(uint32_t value);
 		bool isUpdated(void);
 		void cleanUpdate(void);
 };

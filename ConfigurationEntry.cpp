@@ -2,18 +2,19 @@
 #include "Logger.h"
 #include <string.h>
 
-ConfigurationEntry::ConfigurationEntry(const char *name, unsigned int min_value, unsigned int max_value, unsigned int init_value)
+ConfigurationEntry::ConfigurationEntry(const char *name, uint32_t min_value, uint32_t max_value, uint32_t init_value)
 {
+	//log_debug("%s() %p\n", __func__, this);
 	this->min_value = min_value;
 	this->max_value = max_value;
 	this->curr_value = init_value;
 	this->prev_value = init_value;
-	this->name = strdup(name);
+	this->name = name;
 }
 
 ConfigurationEntry::~ConfigurationEntry()
 {
-	free(this->name);
+	//log_debug("%s() %p\n", __func__, this);
 }
 
 const char *ConfigurationEntry::getName(void)
@@ -21,17 +22,17 @@ const char *ConfigurationEntry::getName(void)
 	return this->name;
 }
 
-unsigned int ConfigurationEntry::getValue(void)
+uint32_t ConfigurationEntry::getValue(void)
 {
 	return this->curr_value;
 }
 
-unsigned int ConfigurationEntry::getPrevValue(void)
+uint32_t ConfigurationEntry::getPrevValue(void)
 {
 	return this->prev_value;
 }
 
-bool ConfigurationEntry::setValue(unsigned int value)
+bool ConfigurationEntry::setValue(uint32_t value)
 {
 	if ((value < this->min_value) || (value > this->max_value)) {
 		log_error("Configuration [%s] value %u out of bounds [%u, %u].\n",

@@ -3,14 +3,6 @@
 
 #include "Configuration.h"
 
-struct GlobalConfigurationEntry {
-	unsigned int id;
-	const char *name;
-	unsigned int min;
-	unsigned int max;
-	unsigned int init;
-};
-
 class GlobalConfiguration : public Configuration {
 	public:
 		GlobalConfiguration();

@@ -1,20 +1,15 @@
 #include <limits.h>
 #include "TrainConfiguration.h"
 #include "TrainConfigurationIDs.h"
+#include "ConfigurationNode.h"
 #include "Logger.h"
 
 #define TRAIN_CONFIG_ENTRY(_id, _name, _min, _max, _init) \
-	{ \
-		.id = _id, \
-		.name = _name, \
-		.min_value = _min, \
-		.max_value = _max, \
-		.init_value = _init \
-	}
+	ConfigurationNode(_id, _name, _min, _max, _init)
 
 #define TRAIN_CONFIG_ENTRY_2_STATE(_id, _name) TRAIN_CONFIG_ENTRY(_id, _name, 0, 1, 0)
 
-struct Train_Configuration_Entry Train_Config[] = {
+struct ConfigurationNode Train_Configuration_Nodes[] = {
 	TRAIN_CONFIG_ENTRY(CONFIGURATION_ID_HASLER_VELOCITY, "Train velocity", 0, 250, 0),
 	TRAIN_CONFIG_ENTRY(CONFIGURATION_ID_ODOMETER, "Train odometer", 0, UINT_MAX, 0),
 	TRAIN_CONFIG_ENTRY(CONFIGURATION_ID_VOLTMETER_LOW_VOLTAGE, "Voltometer low voltage", 0, 150, 0),
@@ -92,16 +87,22 @@ struct Train_Configuration_Entry Train_Config[] = {
 	TRAIN_CONFIG_ENTRY(CONFIGURATION_ID_LOC_BREAK_VALUE, "Locomotive break value", 0, 1023, 0),
 };
 
-TrainConfiguration::TrainConfiguration() : Configuration("Train Configuration")
+TrainConfiguration::TrainConfiguration() : Configuration("Train Configuration", sizeof(Train_Configuration_Nodes) / sizeof(ConfigurationNode))
 {
-	for (unsigned int i = 0; i < sizeof(Train_Config) / sizeof(struct Train_Configuration_Entry); i++) {
-		ConfigurationEntry *e = new ConfigurationEntry(Train_Config[i].name, Train_Config[i].min_value,
-				Train_Config[i].max_value, Train_Config[i].init_value);
+	//log_debug("%s() %p\n", __func__, this);
 
+	for (uint32_t i = 0; i < sizeof(Train_Configuration_Nodes) / sizeof(struct ConfigurationNode); i++) {
+		ConfigurationNode *node = &Train_Configuration_Nodes[i];
+		ConfigurationEntry *e = new ConfigurationEntry(node->getName(), node->getMin(), node->getMax(), node->getInit());
 		if (e != nullptr) {
-			addConfigurationEntry(Train_Config[i].id, e);
+			addConfigurationEntry(node->getId(), e);
 		} else {
-			log_error("Could not create configuration entry for [%s].\n", Train_Config[i].name);
+			log_error("Could not create configuration entry for [%s].\n", node->getName());
 		}
 	}
+}
+
+TrainConfiguration::~TrainConfiguration()
+{
+	//log_debug("%s() %p\n", __func__, this);
 }

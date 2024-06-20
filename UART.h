@@ -2,7 +2,6 @@
 #define UART_H
 
 #include <stdint.h>
-#include <string>
 #include "ICommunicationHandler.h"
 #include "FDOperations.h"
 

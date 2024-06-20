@@ -12,8 +12,6 @@ DummyOutputController::~DummyOutputController()
 
 void DummyOutputController::sync(IController::SyncDirection dir)
 {
-	conf->accessLock();
 	conf->dumpConfigUpdates();
 	conf->cleanUpdates();
-	conf->accessUnlock();
 }

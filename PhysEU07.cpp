@@ -49,13 +49,11 @@ void PhysEU07::sync(IController::SyncDirection direction)
 	if (this->i2c == nullptr)
 		return;
 
-	this->conf->accessLock();
 	if (direction == IController::SyncDirection::FROM_CONTROLLER) {
 		I2CToConfig();
 	} else {
 		configToI2C();
 	}
-	this->conf->accessUnlock();
 }
 
 

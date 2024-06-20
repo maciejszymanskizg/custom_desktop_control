@@ -40,10 +40,10 @@ struct MainParameters {
 	enum OutputControllerType outputControllerType;
 	std::string uart_node;
 	UART::Baudrate uart_baudrate;
-	std::string i2c_node;
-	std::string input_ip;
+	char i2c_node[32];
+	char input_ip[32];
 	unsigned short input_port;
-	std::string output_ip;
+	char output_ip[32];
 	unsigned short output_port;
 	bool log_changes;
 };
@@ -56,10 +56,8 @@ struct MainOptions {
 	ICommunicationHandler *tcpip_output_handler;
 	IController *input_controller;
 	IController *output_controller;
-	Configuration *train_configuration;
-	Configuration *global_configuration;
-	std::thread *main_thread;
-	bool thread_running_flag;
+	TrainConfiguration *train_configuration;
+	GlobalConfiguration *global_configuration;
 };
 
 IController *createMaszynaUARTInputController(ICommunicationHandler *communication_handler,
@@ -247,7 +245,7 @@ bool parseParams(int argc, char *argv[], struct MainParameters & params)
 					struct stat s;
 
 					if (stat(optarg, &s) == 0) {
-						params.i2c_node = std::string(optarg);
+						snprintf(params.i2c_node, sizeof(params.i2c_node), "%s", optarg);
 					} else {
 						log_error("I2C device [%s] does not exists.\n");
 						result = false;
@@ -259,7 +257,8 @@ bool parseParams(int argc, char *argv[], struct MainParameters & params)
 					unsigned int a,b,c,d;
 
 					if (sscanf(optarg, "%u.%u.%u.%u", &a, &b, &c, &d) == 4) {
-						params.input_ip = std::string(optarg);
+						snprintf(params.input_ip, sizeof(params.input_ip), "%u.%u.%u.%u",
+									a, b, c, d);
 					} else {
 						log_error("Invalid input controller IP address [%s].\n", optarg);
 						result = false;
@@ -284,7 +283,8 @@ bool parseParams(int argc, char *argv[], struct MainParameters & params)
 					unsigned int a,b,c,d;
 
 					if (sscanf(optarg, "%u.%u.%u.%u", &a, &b, &c, &d) == 4) {
-						params.output_ip = std::string(optarg);
+						snprintf(params.output_ip, sizeof(params.output_ip), "%u.%u.%u.%u",
+									a, b, c, d);
 					} else {
 						log_error("Invalid output controller IP address [%s].\n", optarg);
 						result = false;
@@ -342,8 +342,6 @@ void clearOptions(struct MainOptions & options)
 	options.global_configuration = new GlobalConfiguration();
 	options.input_controller = nullptr;
 	options.output_controller = nullptr;
-	options.main_thread = nullptr;
-	options.thread_running_flag = true;
 }
 
 bool setup(struct MainOptions & options)
@@ -366,10 +364,10 @@ bool setup(struct MainOptions & options)
 	}
 
 	if (options.params.outputControllerType == OUTPUT_CONTROLLER_TYPE_VIRT_EU07_TCPIP) {
-		if (options.params.output_ip.size() > 0) {
+		if (strlen(options.params.output_ip) > 0) {
 			if (options.params.output_port != USHRT_MAX) {
 				options.tcpip_output_handler = new TCPIP(TCPIP::Mode::TCPIP_MODE_SERVER,
-						options.params.output_ip.c_str(), options.params.output_port);
+						options.params.output_ip, options.params.output_port);
 				options.output_controller = new VirtEU07(options.train_configuration, dynamic_cast<TCPIP *>(options.tcpip_output_handler));
 			} else {
 				log_error("TCPIP port of output controller not specified.\n");
@@ -380,8 +378,8 @@ bool setup(struct MainOptions & options)
 			goto out;
 		}
 	} else if (options.params.outputControllerType == OUTPUT_CONTROLLER_TYPE_PHYS_EU07_I2C) {
-		if (options.params.i2c_node.size() > 0) {
-			options.i2c_handler = new I2C(options.params.i2c_node.c_str());
+		if (strlen(options.params.i2c_node) > 0) {
+			options.i2c_handler = new I2C(options.params.i2c_node);
 			options.output_controller = new PhysEU07(options.train_configuration, options.global_configuration, options.i2c_handler);
 		} else {
 			log_error("I2C node of output controller not specified.\n");
@@ -413,20 +411,16 @@ void freeOptions(struct MainOptions & options)
 
 	if (options.global_configuration != nullptr)
 		delete options.global_configuration;
-
-	if (options.main_thread != nullptr) {
-		options.thread_running_flag = false;
-		options.main_thread->join();
-		delete options.main_thread;
-	}
 }
 
-void mainThreadFunc(struct MainOptions & options)
+static volatile sig_atomic_t keep_running = 1;
+
+void mainLoop(struct MainOptions & options)
 {
 	log_debug("Starting main thread.\n");
 	unsigned int wait_ms = options.global_configuration->getValue(CONFIGURATION_ID_MAIN_THREAD_SLEEP_MS);
 
-	while (options.thread_running_flag) {
+	while (keep_running) {
 		options.input_controller->sync(IController::SyncDirection::FROM_CONTROLLER);
 		options.output_controller->sync(IController::SyncDirection::TO_CONTROLLER);
 		if (options.params.log_changes)
@@ -439,11 +433,9 @@ void mainThreadFunc(struct MainOptions & options)
 			options.train_configuration->dumpConfigUpdates();
 		options.train_configuration->cleanUpdates();
 
-		std::this_thread::sleep_for(std::chrono::milliseconds(wait_ms));
+		usleep(wait_ms * 1000);
 	}
 }
-
-static volatile sig_atomic_t keep_running = 1;
 
 static void signalHandler(int signal_no)
 {
@@ -456,7 +448,6 @@ int main(int argc, char *argv[])
 {
 	int status = EXIT_FAILURE;
 	struct MainOptions options;
-	unsigned int wait_ms;
 
 	clearOptions(options);
 
@@ -470,20 +461,8 @@ int main(int argc, char *argv[])
 
 	signal(SIGINT, signalHandler);
 
-	options.main_thread = new std::thread(mainThreadFunc, std::ref(options));
-	if (options.main_thread == nullptr) {
-		log_error("Could not create main thread.\n");
-		goto out;
-	}
+	mainLoop(options);
 
-	wait_ms = options.global_configuration->getValue(CONFIGURATION_ID_MAIN_THREAD_SLEEP_MS);
-
-	while (keep_running) {
-		std::this_thread::sleep_for(std::chrono::milliseconds(wait_ms));
-	}
-
-	options.thread_running_flag = false;
-	options.main_thread->join();
 	status = EXIT_SUCCESS;
 
 out:

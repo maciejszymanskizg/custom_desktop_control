@@ -18,7 +18,7 @@ OBJECTS := $(patsubst %.cpp,%.o,$(SOURCES))
 CXX ?= g++
 
 # Compiler flags
-CXXFLAGS = -Wall -Werror -DVERSION=\"$(GIT_VERSION)\" -g
+CXXFLAGS = -Wall -Wpedantic -Werror -DVERSION=\"$(GIT_VERSION)\" -g 
 
 # Linker flags
 LDFLAGS = -lpthread

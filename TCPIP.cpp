@@ -11,7 +11,7 @@
 TCPIP::TCPIP(enum TCPIP::Mode mode, const char *address, unsigned int port)
 {
 	this->mode = mode;
-	this->address = strdup(address);
+	this->address = address;
 	this->port = port;
 	this->sockfd = socket(AF_INET, SOCK_STREAM, 0);
 	this->client_sockfd = -1;
@@ -29,8 +29,6 @@ TCPIP::~TCPIP()
 
 	if (this->client_sockfd != -1)
 		close(this->client_sockfd);
-
-	free(this->address);
 }
 
 bool TCPIP::connectSocket(void)

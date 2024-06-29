@@ -339,6 +339,10 @@ void clearOptions(struct MainOptions & options)
 	options.params.input_port = USHRT_MAX;
 	options.params.output_port = USHRT_MAX;
 	options.params.log_changes = false;
+	options.i2c_handler = nullptr;
+	options.uart_handler = nullptr;
+	options.tcpip_input_handler = nullptr;
+	options.tcpip_output_handler = nullptr;
 	options.train_configuration = new TrainConfiguration();
 	options.global_configuration = new GlobalConfiguration();
 	options.input_controller = nullptr;
@@ -408,6 +412,18 @@ out:
 
 void freeOptions(struct MainOptions & options)
 {
+	if (options.i2c_handler != nullptr)
+		delete options.i2c_handler;
+
+	if (options.uart_handler != nullptr)
+		delete options.uart_handler;
+
+	if (options.tcpip_input_handler != nullptr)
+		delete options.tcpip_input_handler;
+
+	if (options.tcpip_output_handler != nullptr)
+		delete options.tcpip_output_handler;
+
 	if (options.input_controller != nullptr)
 		delete options.input_controller;
 

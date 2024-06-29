@@ -62,7 +62,7 @@ void MaszynaUART::readUART(void)
 	 * | trainstate.dir_backward << 6),
 	 */
 	conf->setValue(CONFIGURATION_ID_INDICATOR_VENTILATOR_OVERLOAD, ((buffer[6] >> 1) & 0x1));
-	conf->setValue(CONFIGURATION_ID_INDICATOR_TRACTION_ENGINE_OVERLOAD, ((buffer[6] >> 2) & 0x1));
+	conf->setValue(CONFIGURATION_ID_INDICATOR_HIGH_START, ((buffer[6] >> 2) & 0x1));
 
 	/* byte 7 :
 	 * trainstate.coupled_hv_voltage_relays << 0
@@ -99,6 +99,8 @@ void MaszynaUART::readUART(void)
 	 */
 	conf->setValue(CONFIGURATION_ID_INDICATOR_LINE_CONTACTORS, ((buffer[9] >> 0) & 0x1));
 	conf->setValue(CONFIGURATION_ID_INDICATOR_CONVERTER_OVERLOAD, ((buffer[9] >> 2) & 0x1));
+	conf->setValue(CONFIGURATION_ID_INDICATOR_MAIN_CIRCUIT_DIFFERENTIAL, ((buffer[9] >> 3) & 0x1));
+	conf->setValue(CONFIGURATION_ID_INDICATOR_TRACTION_ENGINE_OVERLOAD, ((buffer[9] >> 4) & 0x01));
 	conf->setValue(CONFIGURATION_ID_INDICATOR_LINE_BREAKER, ((buffer[9] >> 5) & 0x1));
 	conf->setValue(CONFIGURATION_ID_INDICATOR_COMPRESSOR_OVERLOAD, ((buffer[9] >> 6) & 0x1));
 

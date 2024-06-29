@@ -25,6 +25,11 @@ PhysEU07::PhysEU07(Configuration *train_conf, Configuration *global_conf, ICommu
 	this->i2c = dynamic_cast<I2C *>(handler);
 	if (this->i2c == nullptr) {
 		log_error("Invalid communication handler.\n");
+		pcf8575_0x20 = nullptr;
+		pcf8575_0x21 = nullptr;
+		pcf8575_0x22 = nullptr;
+		pcf8575_0x23 = nullptr;
+		pcf8575_0x24 = nullptr;
 	} else {
 		pcf8575_0x20 = new PCF8575(handler, 0, 0, 0);
 		pcf8575_0x21 = new PCF8575(handler, 1, 0, 0);
@@ -42,6 +47,20 @@ PhysEU07::PhysEU07(Configuration *train_conf, Configuration *global_conf, ICommu
 
 PhysEU07::~PhysEU07()
 {
+	if (pcf8575_0x20 != nullptr)
+		delete pcf8575_0x20;
+
+	if (pcf8575_0x21 != nullptr)
+		delete pcf8575_0x21;
+
+	if (pcf8575_0x22 != nullptr)
+		delete pcf8575_0x22;
+
+	if (pcf8575_0x23 != nullptr)
+		delete pcf8575_0x23;
+
+	if (pcf8575_0x24 != nullptr)
+		delete pcf8575_0x24;
 }
 
 void PhysEU07::sync(IController::SyncDirection direction)
@@ -59,6 +78,9 @@ void PhysEU07::sync(IController::SyncDirection direction)
 
 void PhysEU07::read_0x21(void)
 {
+	if (pcf8575_0x21 == nullptr)
+		return;
+
 	pcf8575_0x21->sync(PCF8575::SYNC_FROM_PCF8575);
 
 	PIN_TO_CONFIG(pcf8575_0x21, 0, conf, CONFIGURATION_ID_BUTTON_WHEELSLIP_COUNTER_ACTION);
@@ -83,6 +105,9 @@ void PhysEU07::read_0x21(void)
 void PhysEU07::read_0x22(void)
 {
 	unsigned int value = 0;
+
+	if (pcf8575_0x22 == nullptr)
+		return;
 
 	pcf8575_0x22->sync(PCF8575::SYNC_FROM_PCF8575);
 
@@ -111,6 +136,9 @@ void PhysEU07::read_0x22(void)
 
 void PhysEU07::read_0x24(void)
 {
+	if (pcf8575_0x24 == nullptr)
+		return;
+
 	pcf8575_0x24->sync(PCF8575::SYNC_FROM_PCF8575);
 
 	PIN_TO_CONFIG(pcf8575_0x24, 0, conf, CONFIGURATION_ID_SWITCH_MAIN_LIGHT);
@@ -198,6 +226,9 @@ void PhysEU07::write_0x20(void)
 	static unsigned int alerter_counter = 0;
 	static bool alerter_indicator = true;
 
+	if (pcf8575_0x20 == nullptr)
+		return;
+
 	CONFIG_TO_PIN(conf, CONFIGURATION_ID_INDICATOR_BUZZER, pcf8575_0x20, 0);
 	CONFIG_TO_PIN(conf, CONFIGURATION_ID_SWITCH_SHP_INDICATOR_DIMM, pcf8575_0x20, 1);
 	CONFIG_TO_PIN(conf, CONFIGURATION_ID_SWITCH_ALERTER_INDICATOR_DIMM, pcf8575_0x20, 2);
@@ -239,6 +270,9 @@ void PhysEU07::write_0x20(void)
 
 void PhysEU07::write_0x23(void)
 {
+	if (pcf8575_0x23 == nullptr)
+		return;
+
 	CONFIG_TO_PIN(conf, CONFIGURATION_ID_SWITCH_MEASURE_INSTRUMENT_LIGHT_DIMM, pcf8575_0x23, 10);
 	CONFIG_TO_PIN(conf, CONFIGURATION_ID_SWITCH_MEASURE_INSTRUMENT_LIGHT, pcf8575_0x23, 11);
 

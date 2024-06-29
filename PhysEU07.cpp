@@ -20,7 +20,7 @@
 
 PhysEU07::PhysEU07(Configuration *train_conf, Configuration *global_conf, ICommunicationHandler *handler) : IController(ControllerType::PHYS_CONTROLLER)
 {
-	this->conf = conf;
+	this->conf = train_conf;
 	this->global_conf = global_conf;
 	this->i2c = dynamic_cast<I2C *>(handler);
 	if (this->i2c == nullptr) {

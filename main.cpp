@@ -338,6 +338,7 @@ void clearOptions(struct MainOptions & options)
 	options.params.uart_baudrate = UART::Baudrate::BAUDRATE_9600;
 	options.params.input_port = USHRT_MAX;
 	options.params.output_port = USHRT_MAX;
+	options.params.log_changes = false;
 	options.train_configuration = new TrainConfiguration();
 	options.global_configuration = new GlobalConfiguration();
 	options.input_controller = nullptr;

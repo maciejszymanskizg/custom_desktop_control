@@ -33,7 +33,6 @@ void PCF8575::setup(const uint16_t & _mask)
 		mask = _mask;
 	}
 
-	log_debug("Setting mask 0x%x on I2c device 0x%x\n", mask, addr);
 	res = i2c->setSlaveAddr(addr);
 	if (res != 0) {
 		return;

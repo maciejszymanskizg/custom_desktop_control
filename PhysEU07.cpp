@@ -212,15 +212,15 @@ void PhysEU07::write_0x20(void)
 				alerter_indicator = !alerter_indicator;
 			}
 
-			pcf8575_0x20->setOutput(PCF8575::PIN_P3, (alerter_indicator ? PCF8575::PinStateLow : PCF8575::PinStateHigh));
+			pcf8575_0x20->setOutput(PCF8575::PIN_P4, (alerter_indicator ? PCF8575::PinStateLow : PCF8575::PinStateHigh));
 		} else {
-			pcf8575_0x20->setOutput(PCF8575::PIN_P3, PCF8575::PinStateHigh);
+			pcf8575_0x20->setOutput(PCF8575::PIN_P4, PCF8575::PinStateHigh);
 		}
 	} else {
-		CONFIG_TO_PIN(conf, CONFIGURATION_ID_INDICATOR_ALERTER, pcf8575_0x20, 3);
+		CONFIG_TO_PIN(conf, CONFIGURATION_ID_INDICATOR_ALERTER, pcf8575_0x20, 4);
 	}
 
-	CONFIG_TO_PIN(conf, CONFIGURATION_ID_INDICATOR_SHP, pcf8575_0x20, 4);
+	CONFIG_TO_PIN(conf, CONFIGURATION_ID_INDICATOR_SHP, pcf8575_0x20, 3);
 	CONFIG_TO_PIN(conf, CONFIGURATION_ID_INDICATOR_RESTISTOR_RIDE, pcf8575_0x20, 5);
 	CONFIG_TO_PIN(conf, CONFIGURATION_ID_INDICATOR_TRAIN_HEATING, pcf8575_0x20, 6);
 	CONFIG_TO_PIN(conf, CONFIGURATION_ID_INDICATOR_HIGH_START, pcf8575_0x20, 7);

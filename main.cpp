@@ -352,13 +352,15 @@ bool setup(struct MainOptions & options)
 	if (options.params.inputControllerType == INPUT_CONTROLLER_TYPE_MASZYNA_UART) {
 		if (options.params.uart_node.size() > 0) {
 			options.uart_handler = new UART(options.params.uart_node.c_str(), options.params.uart_baudrate);
-			options.input_controller = new MaszynaUART(options.uart_handler, options.train_configuration);
+			MaszynaUART *maszynaUART = new MaszynaUART(options.uart_handler, options.train_configuration);
+			options.input_controller = dynamic_cast<IController *>(maszynaUART);
 		} else {
 			log_error("UART device not specified.\n");
 			goto out;
 		}
 	} else if (options.params.inputControllerType == INPUT_CONTROLLER_TYPE_DUMMY) {
-		options.input_controller = new DummyInputController(options.train_configuration);
+		DummyInputController *dummy = new DummyInputController(options.train_configuration);
+		options.input_controller = dynamic_cast<IController *>(dummy);
 	} else {
 		log_error("Input controller not specified.\n");
 		goto out;
@@ -367,9 +369,11 @@ bool setup(struct MainOptions & options)
 	if (options.params.outputControllerType == OUTPUT_CONTROLLER_TYPE_VIRT_EU07_TCPIP) {
 		if (strlen(options.params.output_ip) > 0) {
 			if (options.params.output_port != USHRT_MAX) {
-				options.tcpip_output_handler = new TCPIP(TCPIP::Mode::TCPIP_MODE_SERVER,
+				TCPIP *tcpip = new TCPIP(TCPIP::Mode::TCPIP_MODE_SERVER,
 						options.params.output_ip, options.params.output_port);
-				options.output_controller = new VirtEU07(options.train_configuration, dynamic_cast<TCPIP *>(options.tcpip_output_handler));
+				VirtEU07 *virteu07 = new VirtEU07(options.train_configuration, tcpip);
+				options.tcpip_output_handler = dynamic_cast<ICommunicationHandler *>(tcpip);
+				options.output_controller = dynamic_cast<IController *>(virteu07);
 			} else {
 				log_error("TCPIP port of output controller not specified.\n");
 				goto out;
@@ -380,14 +384,17 @@ bool setup(struct MainOptions & options)
 		}
 	} else if (options.params.outputControllerType == OUTPUT_CONTROLLER_TYPE_PHYS_EU07_I2C) {
 		if (strlen(options.params.i2c_node) > 0) {
-			options.i2c_handler = new I2C(options.params.i2c_node);
-			options.output_controller = new PhysEU07(options.train_configuration, options.global_configuration, options.i2c_handler);
+			I2C *i2c = new I2C(options.params.i2c_node);
+			PhysEU07 *physEU07 = new PhysEU07(options.train_configuration, options.global_configuration, i2c);
+			options.i2c_handler = dynamic_cast<ICommunicationHandler *>(i2c);
+			options.output_controller = dynamic_cast<IController *>(physEU07);
 		} else {
 			log_error("I2C node of output controller not specified.\n");
 			goto out;
 		}
 	} else if (options.params.outputControllerType == OUTPUT_CONTROLLER_TYPE_DUMMY) {
-		options.output_controller = new DummyOutputController(options.train_configuration);
+		DummyOutputController *dummy = new DummyOutputController(options.train_configuration);
+		options.output_controller = dynamic_cast<IController *>(dummy);
 	} else {
 		log_error("Output controller not specified.\n");
 		goto out;

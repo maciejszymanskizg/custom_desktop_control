@@ -3,12 +3,14 @@
 
 #include <stdint.h>
 #include "ConfigurationEntry.h"
+#include "Mutex.h"
 
 class Configuration {
 	private:
 		const char *name;
 		ConfigurationEntry **entries;
 		uint32_t entries_count;
+		Mutex *mutex;
 
 	protected:
 		bool addConfigurationEntry(const uint32_t id, ConfigurationEntry *entry);
@@ -17,6 +19,9 @@ class Configuration {
 
 		Configuration(const char *name, uint32_t size);
 		~Configuration();
+
+		void accessLock(void);
+		void accessUnlock(void);
 
 		const char *getName(void);
 		ConfigurationEntry *getEntry(const uint32_t id);

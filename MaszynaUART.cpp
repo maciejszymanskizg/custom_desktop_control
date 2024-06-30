@@ -49,6 +49,8 @@ void MaszynaUART::readUART(void)
 		return;
 	}
 
+	conf->accessLock();
+
 	/* byte 4 - 5  tacho */
 	conf->setValue(CONFIGURATION_ID_HASLER_VELOCITY, UNPACK_16BIT(buffer[4], buffer[5]));
 
@@ -157,6 +159,8 @@ void MaszynaUART::readUART(void)
 	conf->setValue(CONFIGURATION_ID_PANTOGRAH_PRESSURE, UNPACK_16BIT(buffer[38], buffer[39]));
 
 	/* byte 40 - 51 : 0 */
+
+	conf->accessUnlock();
 }
 
 unsigned int MaszynaUART::getConfigValue(unsigned int id)
@@ -179,6 +183,8 @@ void MaszynaUART::writeUART(void)
 	buffer[1] = 0xEF;
 	buffer[2] = 0xEF;
 	buffer[3] = 0xEF;
+
+	conf->accessLock();
 
 	/* byte 4 : switch group 0 */
 	buffer[4] =
@@ -261,6 +267,8 @@ void MaszynaUART::writeUART(void)
 	buffer[16] = 0xF0 /* max volume */ | (getConfigValue(CONFIGURATION_ID_SWITCH_RADIO_CHANNEL) & 0xf);
 
 	/* bytes 17 - 19 : 0 */
+
+	conf->accessUnlock();
 
 	uart->writeData(buffer, MASZYNA_OUTPUT_BUFFER_SIZE);
 	packet_received = false;

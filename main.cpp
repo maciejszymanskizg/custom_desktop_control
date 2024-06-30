@@ -439,26 +439,46 @@ void freeOptions(struct MainOptions & options)
 
 static volatile sig_atomic_t keep_running = 1;
 
-void mainLoop(struct MainOptions & options)
+void show_conf_updates(struct MainOptions *options)
 {
-	log_debug("Starting main thread.\n");
-	unsigned int wait_ms = options.global_configuration->getValue(CONFIGURATION_ID_MAIN_THREAD_SLEEP_MS);
+	options->train_configuration->accessLock();
+	if (options->params.log_changes) {
+		options->train_configuration->dumpConfigUpdates();
+	}
+	options->train_configuration->cleanUpdates();
+	options->train_configuration->accessUnlock();
+}
+
+void input_controller_thread(struct MainOptions *options)
+{
+	unsigned int wait_ms = options->global_configuration->getValue(CONFIGURATION_ID_MAIN_THREAD_SLEEP_MS);
+	log_debug("Starting input_controller thread\n");
 
 	while (keep_running) {
-		options.input_controller->sync(IController::SyncDirection::FROM_CONTROLLER);
-		options.output_controller->sync(IController::SyncDirection::TO_CONTROLLER);
-		if (options.params.log_changes)
-			options.train_configuration->dumpConfigUpdates();
-		options.train_configuration->cleanUpdates();
-
-		options.output_controller->sync(IController::SyncDirection::FROM_CONTROLLER);
-		options.input_controller->sync(IController::SyncDirection::TO_CONTROLLER);
-		if (options.params.log_changes)
-			options.train_configuration->dumpConfigUpdates();
-		options.train_configuration->cleanUpdates();
+		options->input_controller->sync(IController::SyncDirection::FROM_CONTROLLER);
+		show_conf_updates(options);
+		options->input_controller->sync(IController::SyncDirection::TO_CONTROLLER);
 
 		usleep(wait_ms * 1000);
 	}
+
+	log_debug("Exit input_controller thread\n");
+}
+
+void output_controller_thread(struct MainOptions *options)
+{
+	unsigned int wait_ms = options->global_configuration->getValue(CONFIGURATION_ID_MAIN_THREAD_SLEEP_MS);
+	log_debug("Starting output_controller thread\n");
+
+	while (keep_running) {
+		options->output_controller->sync(IController::SyncDirection::TO_CONTROLLER);
+		show_conf_updates(options);
+		options->output_controller->sync(IController::SyncDirection::FROM_CONTROLLER);
+
+		usleep(wait_ms * 1000);
+	}
+
+	log_debug("Exit output_controller thread\n");
 }
 
 static void signalHandler(int signal_no)
@@ -472,6 +492,9 @@ int main(int argc, char *argv[])
 {
 	int status = EXIT_FAILURE;
 	struct MainOptions options;
+	std::thread *input_thread;
+	std::thread *output_thread;
+
 
 	clearOptions(options);
 
@@ -485,7 +508,20 @@ int main(int argc, char *argv[])
 
 	signal(SIGINT, signalHandler);
 
-	mainLoop(options);
+	input_thread = new std::thread(input_controller_thread, &options);
+	output_thread = new std::thread(output_controller_thread, &options);
+
+
+	while (keep_running) {
+		usleep(50);
+	}
+	//mainLoop(options);
+
+	input_thread->join();
+	output_thread->join();
+
+	delete input_thread;
+	delete output_thread;
 
 	status = EXIT_SUCCESS;
 

@@ -74,7 +74,7 @@ void MaszynaUART::readUART(void)
 	 * | trainstate.battery << 6
 	 * | trainstate.radiomessageindicator << 7
 	 */
-	conf->setValue(CONFIGURATION_ID_INDICATOR_MAIN_CIRCUIT_DIFFERENTIAL, ((buffer[7] >> 0) & 0x1));
+	//conf->setValue(CONFIGURATION_ID_INDICATOR_MAIN_CIRCUIT_DIFFERENTIAL, ((buffer[7] >> 0) & 0x1));
 
 	/* byte 8 :
 	 * trainstate.train_heating << 0

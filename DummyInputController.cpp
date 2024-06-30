@@ -17,6 +17,8 @@ DummyInputController::~DummyInputController()
 
 void DummyInputController::generateRandomData(void)
 {
+	this->conf->accessLock();
+
 	if (RANDOM_CONDITION(5)) {
 		this->conf->setValue(CONFIGURATION_ID_HASLER_VELOCITY, RANDOM_VALUE(150));
 	}
@@ -25,9 +27,8 @@ void DummyInputController::generateRandomData(void)
 		this->conf->setValue(CONFIGURATION_ID_VOLTMETER_LOW_VOLTAGE, RANDOM_VALUE(150));
 	}
 
-
+	this->conf->accessUnlock();
 }
-
 
 void DummyInputController::sync(IController::SyncDirection dir)
 {

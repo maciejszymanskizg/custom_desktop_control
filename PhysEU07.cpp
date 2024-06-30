@@ -83,6 +83,8 @@ void PhysEU07::read_0x21(void)
 
 	pcf8575_0x21->sync(PCF8575::SYNC_FROM_PCF8575);
 
+	conf->accessLock();
+
 	PIN_TO_CONFIG(pcf8575_0x21, 0, conf, CONFIGURATION_ID_BUTTON_WHEELSLIP_COUNTER_ACTION);
 	PIN_TO_CONFIG(pcf8575_0x21, 1, conf, CONFIGURATION_ID_SWITCH_ALERTER_INDICATOR_DIMM);
 	PIN_TO_CONFIG(pcf8575_0x21, 2, conf, CONFIGURATION_ID_SWITCH_PANTHOGRAPH_B);
@@ -100,6 +102,8 @@ void PhysEU07::read_0x21(void)
 	PIN_TO_CONFIG(pcf8575_0x21, 15, conf, CONFIGURATION_ID_BUTTON_RESERVE);
 	PIN_TO_CONFIG(pcf8575_0x21, 16, conf, CONFIGURATION_ID_BUTTON_LINE_BREAKER_ENABLE);
 	PIN_TO_CONFIG(pcf8575_0x21, 17, conf, CONFIGURATION_ID_BUTTON_LINE_BREAKER_DISABLE);
+
+	conf->accessUnlock();
 }
 
 void PhysEU07::read_0x22(void)
@@ -110,6 +114,8 @@ void PhysEU07::read_0x22(void)
 		return;
 
 	pcf8575_0x22->sync(PCF8575::SYNC_FROM_PCF8575);
+
+	conf->accessLock();
 
 	PIN_TO_CONFIG(pcf8575_0x22, 0, conf, CONFIGURATION_ID_BUTTON_SIREN_LOW);
 	PIN_TO_CONFIG(pcf8575_0x22, 1, conf, CONFIGURATION_ID_BUTTON_SIREN_HIGH);
@@ -132,6 +138,8 @@ void PhysEU07::read_0x22(void)
 		(pcf8575_0x22->getInput(PCF8575::PIN_P13) == PCF8575::PinStateLow) ? 2 : 1;
 
 	conf->setValue(CONFIGURATION_ID_SWITCH_BREAK_MODE, value);
+
+	conf->accessUnlock();
 }
 
 void PhysEU07::read_0x24(void)
@@ -140,6 +148,8 @@ void PhysEU07::read_0x24(void)
 		return;
 
 	pcf8575_0x24->sync(PCF8575::SYNC_FROM_PCF8575);
+
+	conf->accessLock();
 
 	PIN_TO_CONFIG(pcf8575_0x24, 0, conf, CONFIGURATION_ID_SWITCH_MAIN_LIGHT);
 	PIN_TO_CONFIG(pcf8575_0x24, 1, conf, CONFIGURATION_ID_SWITCH_CABIN_LIGHT);
@@ -158,6 +168,8 @@ void PhysEU07::read_0x24(void)
 	PIN_TO_CONFIG(pcf8575_0x24, 15, conf, CONFIGURATION_ID_SWITCH_SIGNAL_LAMP_RED_LEFT);
 	PIN_TO_CONFIG(pcf8575_0x24, 16, conf, CONFIGURATION_ID_SWITCH_RESERVE);
 	PIN_TO_CONFIG(pcf8575_0x24, 17, conf, CONFIGURATION_ID_SWITCH_SIGNAL_LAMP_RED_RIGHT);
+
+	conf->accessUnlock();
 }
 
 void PhysEU07::read_0x40(void)
@@ -171,6 +183,8 @@ void PhysEU07::read_0x40(void)
 			uint32_t main_break = (((buffer[3] & 0xff) << 8) | (buffer[4] & 0xff));
 			uint32_t loc_break = (((buffer[5] & 0xff) << 8) | (buffer[6] & 0xff));
 
+			conf->accessLock();
+
 			uint32_t prev_main_break = conf->getValue(CONFIGURATION_ID_MAIN_BREAK_VALUE);
 			uint32_t prev_loc_break = conf->getValue(CONFIGURATION_ID_LOC_BREAK_VALUE);
 
@@ -183,6 +197,8 @@ void PhysEU07::read_0x40(void)
 
 			if (DIFF(loc_break, prev_loc_break) > BREAK_ADC_THRESHOLD)
 				conf->setValue(CONFIGURATION_ID_LOC_BREAK_VALUE, (((buffer[5] & 0xff) << 8) | (buffer[6] & 0xff)));
+
+			conf->accessUnlock();
 		}
 	}
 }
@@ -229,6 +245,8 @@ void PhysEU07::write_0x20(void)
 	if (pcf8575_0x20 == nullptr)
 		return;
 
+	conf->accessLock();
+
 	CONFIG_TO_PIN(conf, CONFIGURATION_ID_INDICATOR_BUZZER, pcf8575_0x20, 0);
 	CONFIG_TO_PIN(conf, CONFIGURATION_ID_SWITCH_SHP_INDICATOR_DIMM, pcf8575_0x20, 1);
 	CONFIG_TO_PIN(conf, CONFIGURATION_ID_SWITCH_ALERTER_INDICATOR_DIMM, pcf8575_0x20, 2);
@@ -265,6 +283,8 @@ void PhysEU07::write_0x20(void)
 	CONFIG_TO_PIN(conf, CONFIGURATION_ID_INDICATOR_LINE_BREAKER, pcf8575_0x20, 16);
 	CONFIG_TO_PIN(conf, CONFIGURATION_ID_INDICATOR_TRACTION_ENGINE_OVERLOAD, pcf8575_0x20, 17);
 
+	conf->accessUnlock();
+
 	pcf8575_0x20->sync(PCF8575::SYNC_TO_PCF8575);
 }
 
@@ -273,10 +293,14 @@ void PhysEU07::write_0x23(void)
 	if (pcf8575_0x23 == nullptr)
 		return;
 
+	conf->accessLock();
+
 	CONFIG_TO_PIN(conf, CONFIGURATION_ID_SWITCH_MEASURE_INSTRUMENT_LIGHT_DIMM, pcf8575_0x23, 10);
 	CONFIG_TO_PIN(conf, CONFIGURATION_ID_SWITCH_MEASURE_INSTRUMENT_LIGHT, pcf8575_0x23, 11);
 
 	CONFIG_TO_PIN(conf, CONFIGURATION_ID_SWITCH_CABIN_LIGHT, pcf8575_0x23, 17);
+
+	conf->accessUnlock();
 
 	pcf8575_0x23->sync(PCF8575::SYNC_TO_PCF8575);
 }
@@ -289,8 +313,13 @@ void PhysEU07::write_0x42(void)
 		uint8_t buffer[FIXED_DATA_BUFFER_SIZE_2_VALUES];
 		static uint32_t old_break_pressure = 0;
 		static uint32_t old_hasler_velocity = 0;
+
+		conf->accessLock();
+
 		uint32_t break_pressure = conf->getValue(CONFIGURATION_ID_BREAK_PRESSURE);
 		uint32_t hasler_velocity = conf->getValue(CONFIGURATION_ID_HASLER_VELOCITY);
+
+		conf->accessUnlock();
 
 		if ((DIFF(old_break_pressure, break_pressure) >= PRESSURE_THRESHOLD) ||
 				(DIFF(old_hasler_velocity, hasler_velocity) >= VELOCITY_THRESHOLD)) {
@@ -315,8 +344,13 @@ void PhysEU07::write_0x43(void)
 		uint8_t buffer[FIXED_DATA_BUFFER_SIZE_2_VALUES];
 		static uint32_t old_pipe_pressure = 0;
 		static uint32_t old_tank_pressure = 0;
+
+		conf->accessLock();
+
 		uint32_t pipe_pressure = conf->getValue(CONFIGURATION_ID_PIPE_PRESSURE);
 		uint32_t tank_pressure = conf->getValue(CONFIGURATION_ID_TANK_PRESSURE);
+
+		conf->accessUnlock();
 
 		if ((DIFF(old_pipe_pressure, pipe_pressure) >= PRESSURE_THRESHOLD) ||
 				(DIFF(old_tank_pressure, tank_pressure) >= PRESSURE_THRESHOLD)) {
@@ -342,9 +376,14 @@ void PhysEU07::write_0x44(void)
 		static uint32_t old_alv_value = 0;
 		static uint32_t old_vlv_value = 0;
 		static uint32_t old_ahv_value = 0;
+
+		conf->accessLock();
+
 		uint32_t alv_value = conf->getValue(CONFIGURATION_ID_AMMETER_LOW_VOLTAGE);
 		uint32_t vlv_value = conf->getValue(CONFIGURATION_ID_VOLTMETER_LOW_VOLTAGE);
 		uint32_t ahv_value = conf->getValue(CONFIGURATION_ID_AMMETER_HIGH_VOLTAGE1);
+
+		conf->accessUnlock();
 
 		if ((DIFF(old_alv_value, alv_value) >= AMMETER_THRESHOLD) ||
 				(DIFF(old_vlv_value, vlv_value) >= VOLTMETER_THRESHOLD) ||
@@ -371,8 +410,13 @@ void PhysEU07::write_0x45(void)
 		uint8_t buffer[FIXED_DATA_BUFFER_SIZE_2_VALUES];
 		static uint32_t old_ahv_value = 0;
 		static uint32_t old_vhv_value = 0;
+
+		conf->accessLock();
+
 		uint32_t ahv_value = conf->getValue(CONFIGURATION_ID_AMMETER_HIGH_VOLTAGE2);
 		uint32_t vhv_value = conf->getValue(CONFIGURATION_ID_VOLTMETER_HIGH_VOLTAGE);
+
+		conf->accessUnlock();
 
 		if ((DIFF(old_ahv_value, ahv_value) >= AMMETER_THRESHOLD) ||
 				(DIFF(old_vhv_value, vhv_value) >= VOLTMETER_THRESHOLD)) {

@@ -59,6 +59,8 @@ DataMessage *VirtEU07::createRequestDataMessage(void)
 		CONFIGURATION_ID_INDICATOR_TRAIN_HEATING
 	};
 
+	this->conf->accessLock();
+
 	if (this->conf->checkUpdates(update_ids, sizeof(update_ids) / sizeof(update_ids[0]))) {
 		result = new DataMessage(DataMessage::MessageType::MESSAGE_TYPE_SEND_DATA);
 
@@ -69,6 +71,8 @@ DataMessage *VirtEU07::createRequestDataMessage(void)
 			}
 		}
 	}
+
+	this->conf->accessUnlock();
 
 	return result;
 }
@@ -136,9 +140,14 @@ void VirtEU07::handleInput(void)
 				if (response->getMessageType() == DataMessage::MessageType::MESSAGE_TYPE_RESPONSE_DATA) {
 					std::vector<struct DataMessage::MessageItem *> message_items = response->getMessageItems();
 
+					this->conf->accessLock();
+
 					for (uint32_t i = 0; i < message_items.size(); i++) {
 						this->conf->setValue(message_items[i]->id, message_items[i]->value);
 					}
+
+					this->conf->accessUnlock();
+
 				} else {
 					log_error("Invalid message type 0x%x\n", (uint32_t) response->getMessageType());
 				}

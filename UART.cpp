@@ -50,22 +50,17 @@ UART::UART(const char *device, UART::Baudrate baudrate)
 	} else {
 		struct termios options;
 
-		fcntl(this->fd, F_SETFL, O_RDWR);
+		memset(&options, 0, sizeof(struct termios));
 		tcgetattr(this->fd, &options);
 
-		cfmakeraw(&options);
-		cfsetispeed(&options, BaudrateToSpeed(baudrate));
-		cfsetospeed(&options, BaudrateToSpeed(baudrate));
+		options.c_cflag = BaudrateToSpeed(baudrate);
+		options.c_cflag |= CS8 | CLOCAL | CREAD;
+		options.c_iflag = IGNPAR;
 
-		options.c_cflag |= (CLOCAL | CREAD);
-		options.c_cflag &= ~PARENB;
-		options.c_cflag &= ~CSTOPB;
-		options.c_cflag &= ~CSIZE;
-		options.c_cflag |= CS8;
-		options.c_lflag &= ~(ICANON | ECHO | ECHOE | ISIG);
-		options.c_oflag &= ~OPOST;
 		options.c_cc [VMIN] = 0;
-		options.c_cc [VTIME] = 5;
+		options.c_cc [VTIME] = 1;
+
+		tcflush(this->fd, TCIFLUSH);
 		tcsetattr (this->fd, TCSANOW, &options);
 	}
 }

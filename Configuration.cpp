@@ -8,6 +8,7 @@ Configuration::Configuration(const char *name, uint32_t size)
 	//log_debug("%s() %p\n", __func__, this);
 	this->name = name;
 	this->entries = new ConfigurationEntry *[size];
+	this->mutex = new Mutex();
 	if (this->entries != nullptr) {
 		for (uint32_t i = 0; i < size; i++)
 			this->entries[i] = nullptr;
@@ -28,6 +29,7 @@ Configuration::~Configuration()
 		}
 	}
 	delete [] this->entries;
+	delete this->mutex;
 }
 
 bool Configuration::addConfigurationEntry(const uint32_t id, ConfigurationEntry *entry)
@@ -158,4 +160,14 @@ void Configuration::dumpPointers(void)
 		log_info("this->entries[%u] = %p\n", i,
 				this->entries[i]);
 	}
+}
+
+void Configuration::accessLock(void)
+{
+	this->mutex->lock();
+}
+
+void Configuration::accessUnlock(void)
+{
+	this->mutex->unlock();
 }

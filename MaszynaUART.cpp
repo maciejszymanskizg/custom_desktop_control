@@ -34,9 +34,13 @@ void MaszynaUART::readUART(void)
 {
 	uint8_t buffer[MASZYNA_INPUT_BUFFER_SIZE];
 	bzero(buffer, MASZYNA_INPUT_BUFFER_SIZE);
+	ssize_t read_bytes = this->uart->readData(buffer, MASZYNA_INPUT_BUFFER_SIZE);
 
-	if (this->uart->readData(buffer, MASZYNA_INPUT_BUFFER_SIZE) != MASZYNA_INPUT_BUFFER_SIZE)
+	if (read_bytes != MASZYNA_INPUT_BUFFER_SIZE) {
+		log_error("Received truncated buffer (%u/%u bytes)\n", read_bytes, MASZYNA_INPUT_BUFFER_SIZE);
+		dumpBuffer(buffer, read_bytes);
 		return;
+	}
 
 	this->packet_received = true;
 
@@ -46,6 +50,7 @@ void MaszynaUART::readUART(void)
 		(buffer[2] != 0xEF) ||
 		(buffer[3] != 0xEF)) {
 		log_error("Synchronization error (preamble).\n");
+		dumpBuffer(buffer, read_bytes);
 		return;
 	}
 
@@ -272,4 +277,13 @@ void MaszynaUART::writeUART(void)
 
 	uart->writeData(buffer, MASZYNA_OUTPUT_BUFFER_SIZE);
 	packet_received = false;
+}
+
+void MaszynaUART::dumpBuffer(uint8_t *buffer, ssize_t size)
+{
+	for (ssize_t i = 0; i < size; i++) {
+		log_info("%02x ", (buffer[i] & 0xff));
+	}
+
+	log_info("\n");
 }

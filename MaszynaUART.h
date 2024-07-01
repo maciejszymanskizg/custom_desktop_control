@@ -20,6 +20,7 @@ class MaszynaUART : public IController {
 		void writeUART(void);
 
 		virtual void sync(SyncDirection dir);
+		void dumpBuffer(uint8_t *buffer, ssize_t size);
 };
 
 #endif /* MASZYNA_UART_H */

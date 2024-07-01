@@ -44,25 +44,71 @@ speed_t BaudrateToSpeed(UART::Baudrate baudrate)
 
 UART::UART(const char *device, UART::Baudrate baudrate)
 {
+	struct termios options;
+	int res;
+
 	this->fd = open(device, O_RDWR | O_NOCTTY | O_NDELAY);
+
 	if (this->fd == -1) {
-		log_error("Could not open UART device [%s] : %s\n", device, strerror(errno));
-	} else {
-		struct termios options;
-
-		memset(&options, 0, sizeof(struct termios));
-		tcgetattr(this->fd, &options);
-
-		options.c_cflag = BaudrateToSpeed(baudrate);
-		options.c_cflag |= CS8 | CLOCAL | CREAD;
-		options.c_iflag = IGNPAR;
-
-		options.c_cc [VMIN] = 0;
-		options.c_cc [VTIME] = 1;
-
-		tcflush(this->fd, TCIFLUSH);
-		tcsetattr (this->fd, TCSANOW, &options);
+		log_error("Could not open UART device [%s] - errno %d\n", device, errno);
+		goto exit;
 	}
+
+	if (tcgetattr(this->fd, &options) != 0) {
+		log_error("Could not get UART port [%s] settings - errno %d\n", device, errno);
+		goto fd_close;
+	}
+
+	res = fcntl(this->fd, F_GETFL, 0);
+
+	if (res == -1) {
+		log_error("Could not get UART port [%s] flags - errno %d\n", device, errno);
+		goto fd_close;
+	}
+
+	if (fcntl(this->fd, F_SETFL, res | O_NONBLOCK) == -1) {
+		log_error("Could not set UART port [%s] flags - errno %d\n", device, errno);
+		goto fd_close;
+	}
+
+	options.c_cflag &= ~PARENB; /* clear parity bit */
+	options.c_cflag &= ~CSTOPB; /* clear stop field */
+	options.c_cflag &= ~CSIZE; /* clear all size bits */
+	options.c_cflag |= CS8; /* set 8 bits per byte */
+	options.c_cflag &= ~CRTSCTS; /* disable RTS/CTS hardware flow control */
+	options.c_cflag |= CLOCAL; /* disables carrier detect */
+	options.c_cflag |= CREAD; /* enable UART read */
+
+	options.c_lflag &= ~ICANON; /* disable canonical mode */
+	options.c_lflag &= ~ECHO; /* disable echo */
+	options.c_lflag &= ~ISIG; /* disable interpretation of INTR, QUIT and SUSP */
+
+	options.c_iflag &= ~(IXON | IXOFF | IXANY); /* disable software flow control */
+	options.c_iflag &= ~(IGNBRK | BRKINT | PARMRK | ISTRIP | INLCR | IGNCR | ICRNL); /* disable special handling of received bytes */
+
+	options.c_oflag &= ~OPOST; /* prevent special interpretation of output bytes */
+	options.c_oflag &= ~ONLCR; /* prevent new line to carriage return conversion */
+
+	/* set timeoout to 0.2 seconds */
+	options.c_cc[VMIN] = 0;
+	options.c_cc[VTIME] = 2;
+
+	/* set baudrate */
+	cfsetispeed(&options, BaudrateToSpeed(baudrate));
+	cfsetospeed(&options, BaudrateToSpeed(baudrate));
+
+	if (tcsetattr(this->fd, TCSANOW, &options) != 0) {
+		log_error("Could not get UART port [%s] settings - errno %d\n", device, errno);
+		goto fd_close;
+	}
+
+	goto exit;
+
+fd_close:
+	close(this->fd);
+	this->fd = -1;
+exit:
+	return;
 }
 
 UART::~UART()
@@ -78,10 +124,23 @@ ICommunicationHandler::HandlerType UART::getHandlerType(void)
 
 ssize_t UART::readData(uint8_t *buffer, size_t size)
 {
-	return readFDData(this->fd, buffer, size);
+	ssize_t result = -1;
+
+	if (this->fd != -1)
+		result = readFDData(this->fd, buffer, size);
+
+	return result;
 }
 
 ssize_t UART::writeData(const uint8_t *buffer, size_t size)
 {
-	return writeFDData(this->fd, buffer, size);
+	ssize_t result = -1;
+
+	if (this->fd != -1)
+		result = writeFDData(this->fd, buffer, size);
+
+	if (result != -1)
+		tcdrain(this->fd);
+
+	return result;
 }

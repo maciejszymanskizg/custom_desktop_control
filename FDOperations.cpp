@@ -50,8 +50,5 @@ ssize_t FDOperations::writeFDData(int fd, const uint8_t *buffer, size_t size)
 		}
 	}
 
-	if (size == (size_t) total_bytes)
-		fsync(fd);
-
 	return total_bytes;
 }

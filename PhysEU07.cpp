@@ -203,6 +203,45 @@ void PhysEU07::read_0x40(void)
 	}
 }
 
+void PhysEU07::read_0x41(void)
+{
+	if (i2c->setSlaveAddr(0x41)) {
+		log_error("Could not set I2C slave address 0x41.\n");
+	} else {
+		uint8_t buffer[4];
+
+		if (i2c->readData(buffer, sizeof(buffer)) == sizeof(buffer)) {
+			uint8_t radio_buttons = (buffer[0] & 0xff);
+			uint8_t radio_channel = (buffer[1] & 0xff);
+			uint8_t radio_volume = (buffer[2] & 0xff);
+			uint8_t radio_listen_volume = (buffer[3]);
+
+			uint8_t radio_enable = radio_buttons & 0x1;
+			uint8_t radio_noise = (radio_buttons >> 1) & 0x1;
+			uint8_t radio_stop = (radio_buttons >> 2) & 0x1;
+			uint8_t radio_ext1 = (radio_buttons >> 3) & 0x1;
+			uint8_t radio_ext2 = (radio_buttons >> 4) & 0x1;
+			uint8_t radio_ext3 = (radio_buttons >> 5) & 0x1;
+			uint8_t radio_microphone = (radio_buttons >> 6) & 0x1;
+
+			conf->accessLock();
+
+			conf->setValue(CONFIGURATION_ID_RADIO_SWITCH_ENABLE, radio_enable);
+			conf->setValue(CONFIGURATION_ID_RADIO_SWITCH_NOISE, radio_noise);
+			conf->setValue(CONFIGURATION_ID_RADIO_SWITCH_MICROPHONE_ENABLE, radio_microphone);
+			conf->setValue(CONFIGURATION_ID_RADIO_BUTTON_RADIOSTOP, radio_stop);
+			conf->setValue(CONFIGURATION_ID_RADIO_BUTTON_EXT1, radio_ext1);
+			conf->setValue(CONFIGURATION_ID_RADIO_BUTTON_EXT1, radio_ext2);
+			conf->setValue(CONFIGURATION_ID_RADIO_BUTTON_EXT1, radio_ext3);
+			conf->setValue(CONFIGURATION_ID_RADIO_SWITCH_CHANNEL, radio_channel);
+			conf->setValue(CONFIGURATION_ID_RADIO_SWITCH_VOLUME_LEVEL, radio_volume);
+			conf->setValue(CONFIGURATION_ID_RADIO_SWITCH_LISTENING_LEVEL, radio_listen_volume);
+
+			conf->accessUnlock();
+		}
+	}
+}
+
 void PhysEU07::prepareDataBuffer(uint8_t *buffer, uint32_t size, uint32_t value1, uint32_t value2)
 {
 	if (size != FIXED_DATA_BUFFER_SIZE_2_VALUES) {
@@ -303,6 +342,39 @@ void PhysEU07::write_0x23(void)
 	conf->accessUnlock();
 
 	pcf8575_0x23->sync(PCF8575::SYNC_TO_PCF8575);
+}
+
+void PhysEU07::write_0x41(void)
+{
+	if (i2c->setSlaveAddr(0x41)) {
+		log_error("Cound not set I2C slave address 0x41.\n");
+	} else {
+		uint8_t buffer[2];
+		static uint8_t old_radio_enable = 0;
+		static uint8_t old_sfn = 0;
+
+		conf->accessLock();
+
+		uint8_t radio_enable = conf->getValue(CONFIGURATION_ID_RADIO_SWITCH_ENABLE);
+		uint8_t sfn = conf->getValue(CONFIGURATION_ID_RADIO_SWITCH_MICROPHONE_ENABLE) |
+			conf->getValue(CONFIGURATION_ID_RADIO_BUTTON_RADIOSTOP) |
+			conf->getValue(CONFIGURATION_ID_RADIO_BUTTON_EXT1) |
+			conf->getValue(CONFIGURATION_ID_RADIO_BUTTON_EXT2) |
+			conf->getValue(CONFIGURATION_ID_RADIO_BUTTON_EXT3);
+
+		conf->accessUnlock();
+
+		if ((radio_enable != old_radio_enable) ||
+				(sfn != old_sfn)) {
+
+			if (i2c->writeData(buffer, sizeof(buffer)) != sizeof(buffer)) {
+				log_error("Error in writing data to 0x41.\n");
+			}
+
+			old_radio_enable = radio_enable;
+			old_sfn = sfn;
+		}
+	}
 }
 
 void PhysEU07::write_0x42(void)

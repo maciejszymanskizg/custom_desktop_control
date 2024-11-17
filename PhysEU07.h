@@ -27,9 +27,11 @@ class PhysEU07 : public IController {
 		void read_0x22(void);
 		void read_0x24(void);
 		void read_0x40(void);
+		void read_0x41(void);
 
 		void write_0x20(void);
 		void write_0x23(void);
+		void write_0x41(void);
 		void write_0x42(void);
 		void write_0x43(void);
 		void write_0x44(void);

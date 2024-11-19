@@ -269,7 +269,9 @@ void MaszynaUART::writeUART(void)
 	buffer[15] = ((getConfigValue(CONFIGURATION_ID_LOC_BREAK_VALUE) >> 8) & 0xff);
 
 	/* byte 16 : radio controll */
-	buffer[16] = 0xF0 /* max volume */ | (getConfigValue(CONFIGURATION_ID_SWITCH_RADIO_CHANNEL) & 0xf);
+
+	buffer[16] = (getConfigValue(CONFIGURATION_ID_RADIO_SWITCH_VOLUME_LEVEL) << 4) |
+		(getConfigValue(CONFIGURATION_ID_RADIO_SWITCH_CHANNEL));
 
 	/* bytes 17 - 19 : 0 */
 

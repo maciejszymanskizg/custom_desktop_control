@@ -231,8 +231,8 @@ void PhysEU07::read_0x41(void)
 			conf->setValue(CONFIGURATION_ID_RADIO_SWITCH_MICROPHONE_ENABLE, radio_microphone);
 			conf->setValue(CONFIGURATION_ID_RADIO_BUTTON_RADIOSTOP, radio_stop);
 			conf->setValue(CONFIGURATION_ID_RADIO_BUTTON_EXT1, radio_ext1);
-			conf->setValue(CONFIGURATION_ID_RADIO_BUTTON_EXT1, radio_ext2);
-			conf->setValue(CONFIGURATION_ID_RADIO_BUTTON_EXT1, radio_ext3);
+			conf->setValue(CONFIGURATION_ID_RADIO_BUTTON_EXT2, radio_ext2);
+			conf->setValue(CONFIGURATION_ID_RADIO_BUTTON_EXT3, radio_ext3);
 			conf->setValue(CONFIGURATION_ID_RADIO_SWITCH_CHANNEL, radio_channel);
 			conf->setValue(CONFIGURATION_ID_RADIO_SWITCH_VOLUME_LEVEL, radio_volume);
 			conf->setValue(CONFIGURATION_ID_RADIO_SWITCH_LISTENING_LEVEL, radio_listen_volume);
@@ -363,6 +363,9 @@ void PhysEU07::write_0x41(void)
 			conf->getValue(CONFIGURATION_ID_RADIO_BUTTON_EXT3);
 
 		conf->accessUnlock();
+
+		buffer[0] = radio_enable;
+		buffer[1] = sfn;
 
 		if ((radio_enable != old_radio_enable) ||
 				(sfn != old_sfn)) {
@@ -511,10 +514,12 @@ void PhysEU07::I2CToConfig(void)
 	read_0x22();
 	read_0x24();
 	read_0x40();
+	read_0x41();
 }
 
 void PhysEU07::configToI2C(void)
 {
+	write_0x41();
 	write_0x42();
 	write_0x43();
 	write_0x44();

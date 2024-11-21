@@ -194,65 +194,56 @@ void MaszynaUART::writeUART(void)
 	/* byte 4 : switch group 0 */
 	buffer[4] =
 		(getConfigValue(CONFIGURATION_ID_SWITCH_CABIN_ACTIVATION) & 0x1) |
-		((getConfigValue(CONFIGURATION_ID_SWITCH_LEGS_HEATING) & 0x1) << 1) |
-		((getConfigValue(CONFIGURATION_ID_SWITCH_CABIN_LIGHT_DIMM) & 0x1) << 2) |
-		((getConfigValue(CONFIGURATION_ID_SWITCH_MEASURE_INSTRUMENT_LIGHT_DIMM) & 0x1) << 3) |
-		((getConfigValue(CONFIGURATION_ID_SWITCH_SIGNAL_LAMP1_DIMM) & 0x1) << 4) |
-		((getConfigValue(CONFIGURATION_ID_SWITCH_SIGNAL_LAMP2_DIMM) & 0x1) << 5) |
-		((getConfigValue(CONFIGURATION_ID_SWITCH_SIGNAL_LAMP_RED_LEFT) & 0x1) << 6) |
-		((getConfigValue(CONFIGURATION_ID_SWITCH_RESERVE) & 0x1) << 7);
+		((getConfigValue(CONFIGURATION_ID_SWITCH_CABIN_LIGHT_DIMM) & 0x1) << 1) |
+		((getConfigValue(CONFIGURATION_ID_SWITCH_SIGNAL_LAMP_RED_LEFT) & 0x1) << 2) |
+		((getConfigValue(CONFIGURATION_ID_SWITCH_SIGNAL_LAMP_RED_RIGHT) & 0x1) << 3) |
+		((getConfigValue(CONFIGURATION_ID_SWITCH_CABIN_LIGHT) & 0x1) << 4) |
+		((getConfigValue(CONFIGURATION_ID_SWITCH_MEASURE_INSTRUMENT_LIGHT) & 0x1) << 5) |
+		((getConfigValue(CONFIGURATION_ID_SWITCH_SIGNAL_LIGHT_LEFT) & 0x1) << 6) |
+		((getConfigValue(CONFIGURATION_ID_SWITCH_SIGNAL_LIGHT_TOP) & 0x1) << 7);
 
 	/* byte 5 : switch group 1 */
 	buffer[5] =
-		(getConfigValue(CONFIGURATION_ID_SWITCH_SIGNAL_LAMP_RED_RIGHT) & 0x1) |
-		((getConfigValue(CONFIGURATION_ID_SWITCH_MAIN_LIGHT) & 0x1) << 1) |
-		((getConfigValue(CONFIGURATION_ID_SWITCH_CABIN_LIGHT) & 0x1) << 2) |
-		((getConfigValue(CONFIGURATION_ID_SWITCH_MEASURE_INSTRUMENT_LIGHT) & 0x1) << 3) |
-		((getConfigValue(CONFIGURATION_ID_SWITCH_HIGH_VOLTAGE_BOX_LIGHT) & 0x1) << 4) |
-		((getConfigValue(CONFIGURATION_ID_SWITCH_SIGNAL_LIGHT_LEFT) & 0x1) << 5) |
-		((getConfigValue(CONFIGURATION_ID_SWITCH_SIGNAL_LIGHT_TOP) & 0x1) << 6) |
-		((getConfigValue(CONFIGURATION_ID_SWITCH_SIGNAL_LIGHT_RIGHT) & 0x1) << 7);
-
-	/* byte 6 : switch group 2 */
-	buffer[6] =
-		(getConfigValue(CONFIGURATION_ID_SWITCH_BATTERY) & 0x1) |
-		((getConfigValue(CONFIGURATION_ID_SWITCH_SHP_INDICATOR_DIMM) & 0x1) << 1) |
+		(getConfigValue(CONFIGURATION_ID_SWITCH_SIGNAL_LIGHT_RIGHT) & 0x1) |
+		((getConfigValue(CONFIGURATION_ID_SWITCH_BATTERY) & 0x1) << 1) |
 		((getConfigValue(CONFIGURATION_ID_SWITCH_PANTHOGRAPH_A) & 0x1) << 2) |
 		((getConfigValue(CONFIGURATION_ID_SWITCH_COMPRESSOR) & 0x1) << 3) |
 		((getConfigValue(CONFIGURATION_ID_SWITCH_CONVERTER) & 0x1) << 4) |
-		((getConfigValue(CONFIGURATION_ID_SWITCH_ALERTER_INDICATOR_DIMM) & 0x1) << 5) |
-		((getConfigValue(CONFIGURATION_ID_SWITCH_PANTHOGRAPH_B) & 0x1) << 6) |
-		((getConfigValue(CONFIGURATION_ID_SWITCH_TRAIN_HEATING) & 0x1) << 7);
+		((getConfigValue(CONFIGURATION_ID_SWITCH_PANTHOGRAPH_B) & 0x1) << 5) |
+		((getConfigValue(CONFIGURATION_ID_SWITCH_TRAIN_HEATING) & 0x1) << 6) |
+		((getConfigValue(CONFIGURATION_ID_BUTTON_LINE_BREAKER_DISABLE) & 0x1) << 7);
+
+	/* byte 6 : switch group 2 */
+	buffer[6] =
+		(getConfigValue(CONFIGURATION_ID_BUTTON_LINE_BREAKER_ENABLE) & 0x1) |
+		((getConfigValue(CONFIGURATION_ID_BUTTON_TRACTION_ENGINE_OVERLOAD_UNLOCK) & 0x1) << 1) |
+		((getConfigValue(CONFIGURATION_ID_BUTTON_CONVERTER_OVERLOAD_UNLOCK) & 0x1) << 2) |
+		((getConfigValue(CONFIGURATION_ID_BUTTON_LINE_CONTACTORS_DISABLE) & 0x1) << 3) |
+		((getConfigValue(CONFIGURATION_ID_BUTTON_WHEELSLIP_COUNTER_ACTION) & 0x1) << 4) |
+		((getConfigValue(CONFIGURATION_ID_SWITCH_SIGNAL_LIGHT1_DIMM) & 0x1) << 5) |
+		((getConfigValue(CONFIGURATION_ID_BUTTON_RELAXER) & 0x1) << 6) |
+		((getConfigValue(CONFIGURATION_ID_BUTTON_SHP_ALERTER_RESET) & 0x1) << 7);
 
 	/* byte 7 : switch group 3 */
 	buffer[7] =
-		(getConfigValue(CONFIGURATION_ID_BUTTON_RESERVE) & 0x1) |
-		((getConfigValue(CONFIGURATION_ID_BUTTON_COMPRESSOR_OVERLOAD_UNLOCK) & 0x1) << 1) |
-		((getConfigValue(CONFIGURATION_ID_BUTTON_LINE_BREAKER_DISABLE) & 0x1) << 2) |
-		((getConfigValue(CONFIGURATION_ID_BUTTON_LINE_BREAKER_ENABLE) & 0x1) << 3) |
-		((getConfigValue(CONFIGURATION_ID_BUTTON_TRACTION_ENGINE_OVERLOAD_UNLOCK) & 0x1) << 4) |
-		((getConfigValue(CONFIGURATION_ID_BUTTON_CONVERTER_OVERLOAD_UNLOCK) & 0x1) << 5) |
-		((getConfigValue(CONFIGURATION_ID_BUTTON_LINE_CONTACTORS_DISABLE) & 0x1) << 6) |
-		((getConfigValue(CONFIGURATION_ID_BUTTON_WHEELSLIP_COUNTER_ACTION) & 0x1) << 7);
+		(getConfigValue(CONFIGURATION_ID_BUTTON_SIREN_LOW) & 0x1) |
+		((getConfigValue(CONFIGURATION_ID_BUTTON_SIREN_HIGH) & 0x1) << 1) |
+		((getConfigValue(CONFIGURATION_ID_SWITCH_VOLTAGE_RANGE_MODE) & 0x1) << 2) |
+		(((getConfigValue(CONFIGURATION_ID_SWITCH_BREAK_MODE) == 0) & 0x1) << 3) |
+		(((getConfigValue(CONFIGURATION_ID_SWITCH_BREAK_MODE) == 1) & 0x1) << 4) |
+		(((getConfigValue(CONFIGURATION_ID_SWITCH_BREAK_MODE) == 2) & 0x1) << 5) |
+		(((getConfigValue(CONFIGURATION_ID_CONTROLLER_TRAIN_DIRECTION) == 1) & 0x1) << 6) |
+		(((getConfigValue(CONFIGURATION_ID_CONTROLLER_TRAIN_DIRECTION) == 2) & 0x1) << 7);
+
 
 	/* byte 8 : switch group 4 */
 	buffer[8] =
-		(getConfigValue(CONFIGURATION_ID_SWITCH_SIGNAL_LIGHT1_DIMM) & 0x1) |
-		((getConfigValue(CONFIGURATION_ID_SWITCH_SIGNAL_LIGHT2_DIMM) & 0x1) << 1) |
-		((getConfigValue(CONFIGURATION_ID_BUTTON_RELAXER) & 0x1) << 2) |
-		((getConfigValue(CONFIGURATION_ID_BUTTON_SHP_ALERTER_RESET) & 0x1) << 3) |
-		((getConfigValue(CONFIGURATION_ID_BUTTON_SIREN_LOW) & 0x1) << 4) |
-		((getConfigValue(CONFIGURATION_ID_BUTTON_SIREN_HIGH) & 0x1) << 5) |
-		((getConfigValue(CONFIGURATION_ID_SWITCH_WHEEL_PUSH_MODE) & 0x1) << 6) |
-		((getConfigValue(CONFIGURATION_ID_SWITCH_VOLTAGE_RANGE_MODE) & 0x1) << 7);
+		(getConfigValue(CONFIGURATION_ID_RADIO_SWITCH_ENABLE) & 0x1) |
+		((getConfigValue(CONFIGURATION_ID_RADIO_BUTTON_RADIOSTOP) & 0x1) << 1) |
+		((getConfigValue(CONFIGURATION_ID_RADIO_BUTTON_EXT3) & 0x1) << 2);
 
 	/* byte 9 : switch group 5 */
-	buffer[9] =
-		((getConfigValue(CONFIGURATION_ID_SWITCH_BREAK_MODE) == 0) & 0x1) |
-		(((getConfigValue(CONFIGURATION_ID_SWITCH_BREAK_MODE) == 1) & 0x1) << 1) |
-		(((getConfigValue(CONFIGURATION_ID_SWITCH_BREAK_MODE) == 2) & 0x1) << 2) |
-		(((getConfigValue(CONFIGURATION_ID_CONTROLLER_TRAIN_DIRECTION) == 1) & 0x1) << 3) |
-		(((getConfigValue(CONFIGURATION_ID_CONTROLLER_TRAIN_DIRECTION) == 2) & 0x1) << 4);
+	buffer[9] = 0;
 
 	/* byte 10 : master controller */
 	buffer[10] = getConfigValue(CONFIGURATION_ID_CONTROLLER_ADJUSTER_WHEEL_POSITION) & 0xff;

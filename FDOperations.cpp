@@ -5,6 +5,12 @@
 
 FDOperations::FDOperations()
 {
+	this->running_flag = nullptr;
+}
+
+FDOperations::FDOperations(volatile sig_atomic_t *flag)
+{
+	this->running_flag = flag;
 }
 
 FDOperations::~FDOperations()
@@ -27,6 +33,9 @@ ssize_t FDOperations::readFDData(int fd, uint8_t *buffer, size_t size)
 			log_error("Error in reading FD data (%d).\n", errno);
 			break;
 		}
+
+		if ((running_flag != nullptr) && (*running_flag == 0))
+			break;
 	}
 
 	return total_bytes;
@@ -48,6 +57,9 @@ ssize_t FDOperations::writeFDData(int fd, const uint8_t *buffer, size_t size)
 			log_error("Error in reading FD data (%d).\n", errno);
 			break;
 		}
+
+		if ((running_flag != nullptr) && (*running_flag == 0))
+			break;
 	}
 
 	return total_bytes;

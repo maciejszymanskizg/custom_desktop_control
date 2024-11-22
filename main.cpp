@@ -60,6 +60,8 @@ struct MainOptions {
 	GlobalConfiguration *global_configuration;
 };
 
+static volatile sig_atomic_t keep_running = 1;
+
 IController *createMaszynaUARTInputController(ICommunicationHandler *communication_handler,
 		Configuration *train_configuration)
 {
@@ -355,7 +357,7 @@ bool setup(struct MainOptions & options)
 
 	if (options.params.inputControllerType == INPUT_CONTROLLER_TYPE_MASZYNA_UART) {
 		if (options.params.uart_node.size() > 0) {
-			options.uart_handler = new UART(options.params.uart_node.c_str(), options.params.uart_baudrate);
+			options.uart_handler = new UART(options.params.uart_node.c_str(), options.params.uart_baudrate, &keep_running);
 			MaszynaUART *maszynaUART = new MaszynaUART(options.uart_handler, options.train_configuration);
 			options.input_controller = dynamic_cast<IController *>(maszynaUART);
 		} else {
@@ -436,8 +438,6 @@ void freeOptions(struct MainOptions & options)
 	if (options.global_configuration != nullptr)
 		delete options.global_configuration;
 }
-
-static volatile sig_atomic_t keep_running = 1;
 
 void show_conf_updates(struct MainOptions *options)
 {

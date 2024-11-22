@@ -17,7 +17,7 @@ class UART : public ICommunicationHandler, FDOperations {
 			BAUDRATE_460800
 		};
 
-		UART(const char *device, Baudrate baudrate);
+		UART(const char *device, Baudrate baudrate, volatile sig_atomic_t *running_flag);
 		virtual ~UART();
 
 		virtual HandlerType getHandlerType(void);

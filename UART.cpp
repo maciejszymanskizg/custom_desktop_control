@@ -42,7 +42,7 @@ speed_t BaudrateToSpeed(UART::Baudrate baudrate)
 	return speed;
 }
 
-UART::UART(const char *device, UART::Baudrate baudrate)
+UART::UART(const char *device, UART::Baudrate baudrate, volatile sig_atomic_t *flag) : FDOperations(flag)
 {
 	struct termios options;
 	int res;

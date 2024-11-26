@@ -9,9 +9,12 @@
 #define GLOBAL_CONFIGURATION_ENTRY_BOOL(_id, _name, _init) GLOBAL_CONFIGURATION_ENTRY(_id, _name, 0, 1, _init)
 
 struct ConfigurationNode Global_Configuration_Nodes[] = {
-	GLOBAL_CONFIGURATION_ENTRY(CONFIGURATION_ID_MAIN_THREAD_SLEEP_MS, "Main thread sleep ms", 0, 1000, 5),
+	GLOBAL_CONFIGURATION_ENTRY(CONFIGURATION_ID_MAIN_THREAD_SLEEP_US, "Main thread sleep us", 0, 1000000, 10000),
+	GLOBAL_CONFIGURATION_ENTRY(CONFIGURATION_ID_INPUT_THREAD_SLEEP_US, "Input thread sleep us", 0, 1000000, 5000),
+	GLOBAL_CONFIGURATION_ENTRY(CONFIGURATION_ID_OUTPUT_THREAD_SLEEP_US, "Output thread sleep up", 0, 1000000, 5000),
 	GLOBAL_CONFIGURATION_ENTRY_BOOL(CONFIGURATION_ID_AUTO_BLINK_ALERTER, "Auto blink alerter", 0),
 	GLOBAL_CONFIGURATION_ENTRY(CONFIGURATION_ID_AUTO_BLINK_ALERTER_MS, "Auto blink alerter ms", 0, 1000, 500),
+	GLOBAL_CONFIGURATION_ENTRY_BOOL(CONFIGURATION_ID_MASZYNA_UART_CHECK_PACKET_RECEIVED, "Maszyna UART check packet received", 1),
 };
 
 GlobalConfiguration::GlobalConfiguration() : Configuration("Global Configuration", sizeof(Global_Configuration_Nodes) / sizeof(struct ConfigurationNode))

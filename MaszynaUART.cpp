@@ -9,12 +9,13 @@
 #define UNPACK_16BIT(a, b) ((a & 0xff) | ((b & 0xff) << 8))
 
 
-MaszynaUART::MaszynaUART(ICommunicationHandler *uart, Configuration *conf) :
+MaszynaUART::MaszynaUART(ICommunicationHandler *uart, Configuration *conf, bool send_if_received) :
 	IController(IController::ControllerType::HOST_CONTROLLER)
 {
 	this->uart = uart;
 	this->conf = conf;
 	this->packet_received = false;
+	this->send_packet_if_received = send_if_received;
 }
 
 MaszynaUART::~MaszynaUART()
@@ -25,7 +26,7 @@ void MaszynaUART::sync(IController::SyncDirection dir)
 {
 	if (dir == IController::SyncDirection::FROM_CONTROLLER) {
 		readUART();
-	} else if (packet_received) {
+	} else if ((!send_packet_if_received) || (packet_received)) {
 		writeUART();
 	}
 }

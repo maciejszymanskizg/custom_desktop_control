@@ -62,29 +62,6 @@ struct MainOptions {
 
 static volatile sig_atomic_t keep_running = 1;
 
-IController *createMaszynaUARTInputController(ICommunicationHandler *communication_handler,
-		Configuration *train_configuration)
-{
-	IController *ret = nullptr;
-
-	if ((communication_handler == nullptr) ||
-			(communication_handler->getHandlerType() !=
-			 ICommunicationHandler::HandlerType::COMMUNICATION_HANDLER_UART)) {
-		log_error("Invalid communication handler (expected UART)\n");
-		goto out;
-	}
-
-	if (train_configuration == nullptr) {
-		log_error("Invalid train configuration\n");
-		goto out;
-	}
-
-	ret = new MaszynaUART(communication_handler, train_configuration);
-
-out:
-	return ret;
-}
-
 void printVersion(void)
 {
 	log_info("Custom desktop control by Maciej Szymanski (maciej.szymanski.zg@gmail.com)\n");
@@ -358,7 +335,8 @@ bool setup(struct MainOptions & options)
 	if (options.params.inputControllerType == INPUT_CONTROLLER_TYPE_MASZYNA_UART) {
 		if (options.params.uart_node.size() > 0) {
 			options.uart_handler = new UART(options.params.uart_node.c_str(), options.params.uart_baudrate, &keep_running);
-			MaszynaUART *maszynaUART = new MaszynaUART(options.uart_handler, options.train_configuration);
+			bool send_packet_when_received = options.global_configuration->getValue(CONFIGURATION_ID_MASZYNA_UART_CHECK_PACKET_RECEIVED);
+			MaszynaUART *maszynaUART = new MaszynaUART(options.uart_handler, options.train_configuration, send_packet_when_received);
 			options.input_controller = dynamic_cast<IController *>(maszynaUART);
 		} else {
 			log_error("UART device not specified.\n");
@@ -451,7 +429,7 @@ void show_conf_updates(struct MainOptions *options)
 
 void input_controller_thread(struct MainOptions *options)
 {
-	unsigned int wait_ms = options->global_configuration->getValue(CONFIGURATION_ID_MAIN_THREAD_SLEEP_MS);
+	unsigned int wait_us = options->global_configuration->getValue(CONFIGURATION_ID_INPUT_THREAD_SLEEP_US);
 	log_debug("Starting input_controller thread\n");
 
 	while (keep_running) {
@@ -459,7 +437,7 @@ void input_controller_thread(struct MainOptions *options)
 		show_conf_updates(options);
 		options->input_controller->sync(IController::SyncDirection::TO_CONTROLLER);
 
-		usleep(wait_ms * 1000);
+		usleep(wait_us);
 	}
 
 	log_debug("Exit input_controller thread\n");
@@ -467,7 +445,7 @@ void input_controller_thread(struct MainOptions *options)
 
 void output_controller_thread(struct MainOptions *options)
 {
-	unsigned int wait_ms = options->global_configuration->getValue(CONFIGURATION_ID_MAIN_THREAD_SLEEP_MS);
+	unsigned int wait_us = options->global_configuration->getValue(CONFIGURATION_ID_OUTPUT_THREAD_SLEEP_US);
 	log_debug("Starting output_controller thread\n");
 
 	while (keep_running) {
@@ -475,7 +453,7 @@ void output_controller_thread(struct MainOptions *options)
 		show_conf_updates(options);
 		options->output_controller->sync(IController::SyncDirection::FROM_CONTROLLER);
 
-		usleep(wait_ms * 1000);
+		usleep(wait_us);
 	}
 
 	log_debug("Exit output_controller thread\n");
@@ -494,7 +472,7 @@ int main(int argc, char *argv[])
 	struct MainOptions options;
 	std::thread *input_thread;
 	std::thread *output_thread;
-
+	unsigned int wait_us = 0;
 
 	clearOptions(options);
 
@@ -511,11 +489,11 @@ int main(int argc, char *argv[])
 	input_thread = new std::thread(input_controller_thread, &options);
 	output_thread = new std::thread(output_controller_thread, &options);
 
+	wait_us = options.global_configuration->getValue(CONFIGURATION_ID_MAIN_THREAD_SLEEP_US);
 
 	while (keep_running) {
-		usleep(50);
+		usleep(wait_us);
 	}
-	//mainLoop(options);
 
 	input_thread->join();
 	output_thread->join();

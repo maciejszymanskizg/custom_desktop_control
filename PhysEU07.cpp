@@ -295,7 +295,7 @@ void PhysEU07::write_0x20(void)
 			alerter_counter++;
 
 			if (alerter_counter == (global_conf->getValue(CONFIGURATION_ID_AUTO_BLINK_ALERTER_MS) /
-						global_conf->getValue(CONFIGURATION_ID_MAIN_THREAD_SLEEP_MS))) {
+						global_conf->getValue(CONFIGURATION_ID_OUTPUT_THREAD_SLEEP_US / 1000))) {
 				alerter_counter = 0;
 				alerter_indicator = !alerter_indicator;
 			}

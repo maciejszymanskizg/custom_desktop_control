@@ -9,11 +9,12 @@ class MaszynaUART : public IController {
 	private:
 		ICommunicationHandler *uart;
 		Configuration *conf;
+		bool send_packet_if_received;
 		bool packet_received;
 
 		unsigned int getConfigValue(unsigned int id);
 	public:
-		MaszynaUART(ICommunicationHandler *uart, Configuration *conf);
+		MaszynaUART(ICommunicationHandler *uart, Configuration *conf, bool send_if_received);
 		virtual ~MaszynaUART();
 
 		void readUART(void);

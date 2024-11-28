@@ -10,6 +10,9 @@ ConfigurationEntry::ConfigurationEntry(const char *name, uint32_t min_value, uin
 	this->curr_value = init_value;
 	this->prev_value = init_value;
 	this->name = name;
+	this->group_id = GROUP_ID_UNKNOWN;
+	this->update_flag = false;
+	this->group_update_flag = false;
 }
 
 ConfigurationEntry::~ConfigurationEntry()
@@ -40,18 +43,42 @@ bool ConfigurationEntry::setValue(uint32_t value)
 		return false;
 	}
 
-	this->prev_value = this->curr_value;
-	this->curr_value = value;
+	if (value != this->prev_value) {
+		this->prev_value = this->curr_value;
+		this->curr_value = value;
+		this->update_flag = true;
+		this->group_update_flag = true;
+	}
 
 	return true;
 }
 
 bool ConfigurationEntry::isUpdated(void)
 {
-	return (bool) (this->curr_value != this->prev_value);
+	return this->update_flag;
 }
 
 void ConfigurationEntry::cleanUpdate(void)
 {
-	this->prev_value = this->curr_value;
+	this->update_flag = false;
+}
+
+uint32_t ConfigurationEntry::getGroupId(void)
+{
+	return this->group_id;
+}
+
+void ConfigurationEntry::setGroupId(uint32_t id)
+{
+	this->group_id = id;
+}
+
+bool ConfigurationEntry::isGroupUpdated(void)
+{
+	return this->group_update_flag;
+}
+
+void ConfigurationEntry::cleanGroupUpdate(void)
+{
+	this->group_update_flag = false;
 }

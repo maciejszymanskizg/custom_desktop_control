@@ -17,6 +17,8 @@ class PhysEU07 : public IController {
 		PCF8575 *pcf8575_0x23;
 		PCF8575 *pcf8575_0x24;
 
+		void setupConfigurationGroups(void);
+
 		void configToI2C(void);
 		void I2CToConfig(void);
 

@@ -3,6 +3,8 @@
 
 #include <stdint.h>
 
+#define GROUP_ID_UNKNOWN ((uint32_t) -1)
+
 class ConfigurationEntry {
 	private:
 		const char *name;
@@ -10,6 +12,9 @@ class ConfigurationEntry {
 		uint32_t prev_value;
 		uint32_t min_value;
 		uint32_t max_value;
+		bool update_flag;
+		uint32_t group_id;
+		bool group_update_flag;
 
 	public:
 		ConfigurationEntry(const char *name, uint32_t min_value, uint32_t max_value, uint32_t init_value);
@@ -20,6 +25,10 @@ class ConfigurationEntry {
 		bool setValue(uint32_t value);
 		bool isUpdated(void);
 		void cleanUpdate(void);
+		uint32_t getGroupId(void);
+		void setGroupId(uint32_t group_id);
+		bool isGroupUpdated(void);
+		void cleanGroupUpdate(void);
 };
 
 #endif /* CONFIGURATION_ENTRY_H */

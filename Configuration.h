@@ -29,14 +29,18 @@ class Configuration {
 		bool getValue(const uint32_t id, uint32_t & value);
 		uint32_t getValue(const uint32_t id);
 		bool isUpdated(const uint32_t id);
+		bool setGroupId(const uint32_t id, const uint32_t group_id);
+		bool getGroupId(const uint32_t id, uint32_t & value);
 
 		void dumpConfig(void);
 		bool dumpConfigUpdates(void);
 
 		void cleanUpdates(const uint32_t id);
 		void cleanUpdates(void);
+		void cleanGroupUpdates(const uint32_t group_id);
 
 		bool checkUpdates(const uint32_t *ids, uint32_t elems);
+		bool checkGroupUpdates(uint32_t group_id);
 
 		void dumpPointers(void);
 };

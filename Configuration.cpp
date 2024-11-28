@@ -154,6 +154,30 @@ bool Configuration::checkUpdates(const uint32_t *ids, uint32_t elems)
 	return result;
 }
 
+bool Configuration::checkGroupUpdates(uint32_t group_id)
+{
+	bool result = false;
+
+	for (uint32_t i = 0; i < this->entries_count; i++) {
+		if ((this->entries[i]->getGroupId() == group_id) &&
+				(this->entries[i]->isGroupUpdated())) {
+			result = true;
+			break;
+		}
+	}
+
+	return result;
+}
+
+void Configuration::cleanGroupUpdates(const uint32_t group_id)
+{
+	for (uint32_t i = 0; i < this->entries_count++; i++) {
+		if (this->entries[i]->getGroupId() == group_id) {
+			this->entries[i]->cleanGroupUpdate();
+		}
+	}
+}
+
 void Configuration::dumpPointers(void)
 {
 	for (uint32_t i = 0; i < (uint32_t) this->entries_count; i++) {
@@ -170,4 +194,28 @@ void Configuration::accessLock(void)
 void Configuration::accessUnlock(void)
 {
 	this->mutex->unlock();
+}
+
+bool Configuration::setGroupId(const uint32_t id, const uint32_t group_id)
+{
+	bool result = false;
+
+	if ((id < this->entries_count) && (this->entries[id] != nullptr)) {
+		this->entries[id]->setGroupId(group_id);
+		result = true;
+	}
+
+	return result;
+}
+
+bool Configuration::getGroupId(const uint32_t id, uint32_t & group_id)
+{
+	bool result = false;
+
+	if ((id < this->entries_count) && (this->entries[id] != nullptr)) {
+		group_id = this->entries[id]->getGroupId();
+		result = true;
+	}
+
+	return result;
 }

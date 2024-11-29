@@ -9,6 +9,9 @@ class MaszynaTCPIP : public IController, public Maszyna {
 	private:
 		TCPIP *tcpip;
 
+		unsigned int readPreamble(uint8_t *buffer, unsigned int buffer_size);
+		unsigned int getPreambleOffset(uint8_t *buffer, unsigned int buffer_size);
+
 		void readTCPIP(void);
 		void writeTCPIP(void);
 

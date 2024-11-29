@@ -1,8 +1,10 @@
 #include <strings.h>
+#include <string.h>
 #include "MaszynaTCPIP.h"
 #include "Logger.h"
 
-#define MASZYNA_TCP_VIRT_UART_PADDING 38
+#define MASZYNA_TCP_PREAMBLE_BYTES_COUNT 4
+#define MASZYNA_TCP_PREAMBLE_BYTE 0xEF
 
 MaszynaTCPIP::MaszynaTCPIP(TCPIP *tcpip, Configuration *conf) :
 	IController(IController::ControllerType::HOST_CONTROLLER), Maszyna(conf)
@@ -24,9 +26,55 @@ void MaszynaTCPIP::sync(IController::SyncDirection dir)
 	}
 }
 
+unsigned int MaszynaTCPIP::getPreambleOffset(uint8_t *buffer, unsigned int buffer_size)
+{
+	unsigned int result = (unsigned int) -1;
+
+	if (buffer_size >= MASZYNA_TCP_PREAMBLE_BYTES_COUNT) {
+		for (unsigned int i = 0; i < buffer_size - MASZYNA_TCP_PREAMBLE_BYTES_COUNT + 1; i++) {
+			if (((buffer[i] & 0xff) == MASZYNA_TCP_PREAMBLE_BYTE) &&
+					((buffer[i + 1] & 0xff) == MASZYNA_TCP_PREAMBLE_BYTE) &&
+					((buffer[i + 2] & 0xff) == MASZYNA_TCP_PREAMBLE_BYTE) &&
+					((buffer[i + 3] & 0xff) == MASZYNA_TCP_PREAMBLE_BYTE)) {
+				result = i;
+				break;
+			}
+		}
+	}
+
+	if ((result != (unsigned int) -1) && (result > 0)) {
+		log_warning("Preamble found at index %u / %u\n", result, buffer_size);
+	}
+
+	return result;
+}
+
+unsigned int MaszynaTCPIP::readPreamble(uint8_t *buffer, unsigned int buffer_size)
+{
+	unsigned int bytes_read = 0;
+	unsigned int preamble_offset = (unsigned int) -1;
+	unsigned int data_read = 0;
+
+	while ((bytes_read + MASZYNA_TCP_PREAMBLE_BYTES_COUNT <= buffer_size) && (preamble_offset == (unsigned int) -1)) {
+		bytes_read += this->tcpip->readData(&buffer[bytes_read], MASZYNA_TCP_PREAMBLE_BYTES_COUNT);
+		preamble_offset = getPreambleOffset(buffer, bytes_read);
+	}
+
+	if (preamble_offset != (unsigned int) -1) {
+		data_read = bytes_read - preamble_offset;
+
+		if (preamble_offset != 0) {
+			memmove(&buffer[0], &buffer[preamble_offset], data_read);
+		}
+	} else {
+		log_error("Could not find preamble !!!\n");
+	}
+
+	return data_read;
+}
+
 void MaszynaTCPIP::readTCPIP(void)
 {
-	static bool first_packet = true;
 	uint8_t buffer[MASZYNA_INPUT_BUFFER_SIZE];
 	bzero(buffer, MASZYNA_INPUT_BUFFER_SIZE);
 
@@ -35,17 +83,16 @@ void MaszynaTCPIP::readTCPIP(void)
 		return;
 	}
 
-	if (first_packet) {
-		/* HW Virtual Serial Port sends padding bytes */
-		this->tcpip->readData(buffer, MASZYNA_TCP_VIRT_UART_PADDING);
-		first_packet = false;
-	}
+	unsigned int bytes_read = readPreamble(buffer, MASZYNA_INPUT_BUFFER_SIZE);
 
-	ssize_t read_bytes = this->tcpip->readData(buffer, MASZYNA_INPUT_BUFFER_SIZE);
+	if (bytes_read == 0)
+		return;
 
-	if (read_bytes != MASZYNA_INPUT_BUFFER_SIZE) {
-		log_error("Received truncated buffer (%u/%u bytes)\n", read_bytes, MASZYNA_INPUT_BUFFER_SIZE);
-		dumpBuffer(true, buffer, read_bytes);
+	bytes_read += this->tcpip->readData(&buffer[bytes_read], MASZYNA_INPUT_BUFFER_SIZE - bytes_read);
+
+	if (bytes_read != MASZYNA_INPUT_BUFFER_SIZE) {
+		log_error("Received truncated buffer (%u/%u bytes)\n", bytes_read, MASZYNA_INPUT_BUFFER_SIZE);
+		dumpBuffer(true, buffer, bytes_read);
 		return;
 	}
 

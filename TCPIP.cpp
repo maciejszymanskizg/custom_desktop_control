@@ -8,7 +8,8 @@
 #include "TCPIP.h"
 #include "Logger.h"
 
-TCPIP::TCPIP(enum TCPIP::Mode mode, const char *address, unsigned int port)
+TCPIP::TCPIP(enum TCPIP::Mode mode, const char *address, unsigned int port, volatile sig_atomic_t *running_flag) :
+	FDOperations(running_flag)
 {
 	this->mode = mode;
 	this->address = address;

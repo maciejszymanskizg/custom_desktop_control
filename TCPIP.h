@@ -11,7 +11,7 @@ class TCPIP : public ICommunicationHandler, FDOperations {
 			TCPIP_MODE_CLIENT
 		};
 
-		TCPIP(enum Mode mode, const char *address, unsigned int port);
+		TCPIP(enum Mode mode, const char *address, unsigned int port, volatile sig_atomic_t *running_flag);
 		virtual ~TCPIP();
 		bool connectSocket(void);
 

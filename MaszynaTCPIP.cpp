@@ -2,6 +2,8 @@
 #include "MaszynaTCPIP.h"
 #include "Logger.h"
 
+#define MASZYNA_TCP_VIRT_UART_PADDING 38
+
 MaszynaTCPIP::MaszynaTCPIP(TCPIP *tcpip, Configuration *conf) :
 	IController(IController::ControllerType::HOST_CONTROLLER), Maszyna(conf)
 {
@@ -24,12 +26,19 @@ void MaszynaTCPIP::sync(IController::SyncDirection dir)
 
 void MaszynaTCPIP::readTCPIP(void)
 {
+	static bool first_packet = true;
 	uint8_t buffer[MASZYNA_INPUT_BUFFER_SIZE];
 	bzero(buffer, MASZYNA_INPUT_BUFFER_SIZE);
 
 	if (!this->tcpip->isConnected()) {
 		log_error("TCPIP client not connected\n");
 		return;
+	}
+
+	if (first_packet) {
+		/* HW Virtual Serial Port sends padding bytes */
+		this->tcpip->readData(buffer, MASZYNA_TCP_VIRT_UART_PADDING);
+		first_packet = false;
 	}
 
 	ssize_t read_bytes = this->tcpip->readData(buffer, MASZYNA_INPUT_BUFFER_SIZE);

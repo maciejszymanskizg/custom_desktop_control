@@ -33,6 +33,7 @@ bool Maszyna::handleInputBuffer(uint8_t *buffer, uint32_t size)
 			(buffer[3] != MASZYNA_PREAMBLE_BYTE)) {
 		log_error("Synchronization error (preamble)\n");
 		dumpBuffer(true, buffer, size);
+		return false;
 	}
 
 	conf->accessLock();

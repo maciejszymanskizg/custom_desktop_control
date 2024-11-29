@@ -82,7 +82,7 @@ bool TCPIP::connectSocket(void)
 			goto err;
 		} else {
 			log_info("Successfully connected to %s:%d.\n", inet_ntoa(addr.sin_addr),
-					ntohl(addr.sin_port));
+					ntohs(addr.sin_port));
 			this->connected = true;
 		}
 	}

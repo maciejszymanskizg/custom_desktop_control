@@ -4,7 +4,6 @@
 
 ConfigurationEntry::ConfigurationEntry(const char *name, uint32_t min_value, uint32_t max_value, uint32_t init_value)
 {
-	//log_debug("%s() %p\n", __func__, this);
 	this->min_value = min_value;
 	this->max_value = max_value;
 	this->curr_value = init_value;
@@ -17,7 +16,6 @@ ConfigurationEntry::ConfigurationEntry(const char *name, uint32_t min_value, uin
 
 ConfigurationEntry::~ConfigurationEntry()
 {
-	//log_debug("%s() %p\n", __func__, this);
 }
 
 const char *ConfigurationEntry::getName(void)
@@ -43,7 +41,7 @@ bool ConfigurationEntry::setValue(uint32_t value)
 		return false;
 	}
 
-	if (value != this->prev_value) {
+	if (value != this->curr_value) {
 		this->prev_value = this->curr_value;
 		this->curr_value = value;
 		this->update_flag = true;

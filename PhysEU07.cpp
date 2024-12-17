@@ -5,12 +5,10 @@
 
 #define DIFF(x, y) (((x) > (y)) ? ((x) - (y)) : ((y) - (x)))
 #define BREAK_ADC_THRESHOLD 5
-#define PRESSURE_THRESHOLD 5
-#define VELOCITY_THRESHOLD 2
 #define AMMETER_THRESHOLD 5
 #define VOLTMETER_THRESHOLD 2
-#define FIXED_DATA_BUFFER_SIZE_2_VALUES 7
-#define FIXED_DATA_BUFFER_SIZE_3_VALUES 9
+#define FIXED_DATA_BUFFER_SIZE_2_VALUES 4
+#define FIXED_DATA_BUFFER_SIZE_3_VALUES 6
 
 #define BUFFER_SIZE_READ_0x40 7
 #define BUFFER_SIZE_READ_0x41 4
@@ -305,13 +303,10 @@ void PhysEU07::prepareDataBuffer(uint8_t *buffer, uint32_t size, uint32_t value1
 		return;
 	}
 
-	buffer[0] = 0xBE;
-	buffer[1] = ((value1 >> 8) & 0xff);
-	buffer[2] = (value1 & 0xff);
-	buffer[3] = ((value2 >> 8) & 0xff);
-	buffer[4] = (value2 & 0xff);
-	buffer[5] = 0xA6 ^ (buffer[1] & 0xff) ^ (buffer[2] & 0xff) ^ (buffer[3] & 0xff) ^ (buffer[4] & 0xff);
-	buffer[6] = 0xEB;
+	buffer[0] = ((value1 >> 8) & 0xff);
+	buffer[1] = (value1 & 0xff);
+	buffer[2] = ((value2 >> 8) & 0xff);
+	buffer[3] = (value2 & 0xff);
 }
 
 void PhysEU07::prepareDataBuffer(uint8_t *buffer, uint32_t size, uint32_t value1, uint32_t value2, uint32_t value3)
@@ -321,15 +316,12 @@ void PhysEU07::prepareDataBuffer(uint8_t *buffer, uint32_t size, uint32_t value1
 		return;
 	}
 
-	buffer[0] = 0xBE;
-	buffer[1] = ((value1 >> 8) & 0xff);
-	buffer[2] = (value1 & 0xff);
-	buffer[3] = ((value2 >> 8) & 0xff);
-	buffer[4] = (value2 & 0xff);
-	buffer[5] = ((value3 >> 8) & 0xff);
-	buffer[6] = (value3 & 0xff);
-	buffer[7] = 0xA6 ^ (buffer[1] & 0xff) ^ (buffer[2] & 0xff) ^ (buffer[3] & 0xff) ^ (buffer[4] & 0xff) ^ (buffer[5] & 0xff) ^ (buffer[6] & 0xff);
-	buffer[8] = 0xEB;
+	buffer[0] = ((value1 >> 8) & 0xff);
+	buffer[1] = (value1 & 0xff);
+	buffer[2] = ((value2 >> 8) & 0xff);
+	buffer[3] = (value2 & 0xff);
+	buffer[4] = ((value3 >> 8) & 0xff);
+	buffer[5] = (value3 & 0xff);
 }
 
 void PhysEU07::write_0x20(void)
@@ -468,8 +460,6 @@ void PhysEU07::write_0x42(void)
 		log_error("Cound not set I2C slave address 0x42.\n");
 	} else {
 		uint8_t buffer[BUFFER_SIZE_WRITE_0x42];
-		static uint32_t old_break_pressure = 0;
-		static uint32_t old_hasler_velocity = 0;
 		uint32_t break_pressure = 0;
 		uint32_t hasler_velocity = 0;
 
@@ -487,17 +477,11 @@ void PhysEU07::write_0x42(void)
 		conf->accessUnlock();
 
 		if (changed) {
-			if ((DIFF(old_break_pressure, break_pressure) >= PRESSURE_THRESHOLD) ||
-					(DIFF(old_hasler_velocity, hasler_velocity) >= VELOCITY_THRESHOLD)) {
 
-				prepareDataBuffer(buffer, sizeof(buffer), break_pressure, hasler_velocity);
+			prepareDataBuffer(buffer, sizeof(buffer), break_pressure, hasler_velocity);
 
-				if (i2c->writeData(buffer, sizeof(buffer)) != sizeof(buffer)) {
-					log_error("Error in writing data to 0x42.\n");
-				}
-
-				old_break_pressure = break_pressure;
-				old_hasler_velocity = hasler_velocity;
+			if (i2c->writeData(buffer, sizeof(buffer)) != sizeof(buffer)) {
+				log_error("Error in writing data to 0x42.\n");
 			}
 		}
 	}
@@ -509,8 +493,6 @@ void PhysEU07::write_0x43(void)
 		log_error("Cound not set I2C slave address 0x43.\n");
 	} else {
 		uint8_t buffer[BUFFER_SIZE_WRITE_0x43];
-		static uint32_t old_pipe_pressure = 0;
-		static uint32_t old_tank_pressure = 0;
 		uint32_t pipe_pressure = 0;
 		uint32_t tank_pressure = 0;
 
@@ -528,17 +510,10 @@ void PhysEU07::write_0x43(void)
 		conf->accessUnlock();
 
 		if (changed) {
-			if ((DIFF(old_pipe_pressure, pipe_pressure) >= PRESSURE_THRESHOLD) ||
-					(DIFF(old_tank_pressure, tank_pressure) >= PRESSURE_THRESHOLD)) {
+			prepareDataBuffer(buffer, sizeof(buffer), pipe_pressure, tank_pressure);
 
-				prepareDataBuffer(buffer, sizeof(buffer), pipe_pressure, tank_pressure);
-
-				if (i2c->writeData(buffer, sizeof(buffer)) != sizeof(buffer)) {
-					log_error("Error in writing data to 0x42.\n");
-				}
-
-				old_pipe_pressure = pipe_pressure;
-				old_tank_pressure = tank_pressure;
+			if (i2c->writeData(buffer, sizeof(buffer)) != sizeof(buffer)) {
+				log_error("Error in writing data to 0x42.\n");
 			}
 		}
 	}

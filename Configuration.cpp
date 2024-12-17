@@ -171,7 +171,7 @@ bool Configuration::checkGroupUpdates(uint32_t group_id)
 
 void Configuration::cleanGroupUpdates(const uint32_t group_id)
 {
-	for (uint32_t i = 0; i < this->entries_count++; i++) {
+	for (uint32_t i = 0; i < this->entries_count; i++) {
 		if (this->entries[i]->getGroupId() == group_id) {
 			this->entries[i]->cleanGroupUpdate();
 		}

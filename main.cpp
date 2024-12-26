@@ -22,11 +22,13 @@
 #include "TCPIP.h"
 #include "VirtEU07.h"
 #include "PhysEU07.h"
+#include "VirtualControlTCPIP.h"
 
 enum InputControllerType {
 	INPUT_CONTROLLER_TYPE_UNKNOWN,
 	INPUT_CONTROLLER_TYPE_MASZYNA_UART,
 	INPUT_CONTROLLER_TYPE_MASZYNA_TCPIP,
+	INPUT_CONTROLLER_TYPE_VIRTUAL_CONTROL_TCPIP,
 	INPUT_CONTROLLER_TYPE_DUMMY
 };
 
@@ -78,6 +80,7 @@ void printUsage(const char *name)
 	log_info("\t                        supported input controllers :\n");
 	log_info("\t                           maszyna-uart\n");
 	log_info("\t                           maszyna-tcpip\n");
+	log_info("\t                           virtual-control-tcpip\n");
 	log_info("\t                           dummy\n");
 	log_info("\t-o | --output        (mandatory) output controller name\n");
 	log_info("\t                        supported output controllers\n");
@@ -178,6 +181,8 @@ bool parseParams(int argc, char *argv[], struct MainParameters & params)
 						params.inputControllerType = INPUT_CONTROLLER_TYPE_MASZYNA_UART;
 					} else if (strcmp(optarg, "maszyna-tcpip") == 0) {
 						params.inputControllerType = INPUT_CONTROLLER_TYPE_MASZYNA_TCPIP;
+					} else if (strcmp(optarg, "virtual-control-tpcip") == 0) {
+						params.inputControllerType = INPUT_CONTROLLER_TYPE_VIRTUAL_CONTROL_TCPIP;
 					} else if (strcmp(optarg, "dummy") == 0) {
 						params.inputControllerType = INPUT_CONTROLLER_TYPE_DUMMY;
 					} else {
@@ -355,6 +360,22 @@ bool setup(struct MainOptions & options)
 				MaszynaTCPIP *maszynaTCPIP = new MaszynaTCPIP(tcpip, options.train_configuration);
 				options.tcpip_input_handler = dynamic_cast<ICommunicationHandler *>(tcpip);
 				options.input_controller = dynamic_cast<IController *>(maszynaTCPIP);
+			} else {
+				log_error("TCPIP port of input controller not specified.\n");
+				goto out;
+			}
+		} else {
+			log_error("TCPIP ip address of input controller not specified.\n");
+			goto out;
+		}
+	} else if (options.params.inputControllerType == INPUT_CONTROLLER_TYPE_VIRTUAL_CONTROL_TCPIP) {
+		if (strlen(options.params.input_ip) > 0) {
+			if (options.params.input_port != USHRT_MAX) {
+				TCPIP *tcpip = new TCPIP(TCPIP::Mode::TCPIP_MODE_CLIENT,
+						options.params.input_ip, options.params.input_port, &keep_running);
+				VirtualControlTCPIP *virtualControlTCPIP = new VirtualControlTCPIP(tcpip, options.train_configuration);
+				options.tcpip_input_handler = dynamic_cast<ICommunicationHandler *>(tcpip);
+				options.input_controller = dynamic_cast<IController *>(virtualControlTCPIP);
 			} else {
 				log_error("TCPIP port of input controller not specified.\n");
 				goto out;

@@ -430,6 +430,7 @@ void PhysEU07::write_0x41(void)
 				conf->getValue(CONFIGURATION_ID_RADIO_BUTTON_EXT1) |
 				conf->getValue(CONFIGURATION_ID_RADIO_BUTTON_EXT2) |
 				conf->getValue(CONFIGURATION_ID_RADIO_BUTTON_EXT3);
+			sfn &= radio_enable;
 
 			conf->cleanGroupUpdates(0x41);
 		}

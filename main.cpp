@@ -181,7 +181,7 @@ bool parseParams(int argc, char *argv[], struct MainParameters & params)
 						params.inputControllerType = INPUT_CONTROLLER_TYPE_MASZYNA_UART;
 					} else if (strcmp(optarg, "maszyna-tcpip") == 0) {
 						params.inputControllerType = INPUT_CONTROLLER_TYPE_MASZYNA_TCPIP;
-					} else if (strcmp(optarg, "virtual-control-tpcip") == 0) {
+					} else if (strcmp(optarg, "virtual-control-tcpip") == 0) {
 						params.inputControllerType = INPUT_CONTROLLER_TYPE_VIRTUAL_CONTROL_TCPIP;
 					} else if (strcmp(optarg, "dummy") == 0) {
 						params.inputControllerType = INPUT_CONTROLLER_TYPE_DUMMY;

@@ -90,3 +90,8 @@ std::vector<struct DataMessage::MessageItem *> & DataMessage::getMessageItems(vo
 {
 	return this->items;
 }
+
+uint32_t DataMessage::getMessageItemsCount(void)
+{
+	return this->header.number_of_items;
+}

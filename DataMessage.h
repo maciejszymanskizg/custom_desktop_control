@@ -39,6 +39,7 @@ class DataMessage {
 
 		enum MessageType getMessageType(void);
 		std::vector<struct MessageItem *> & getMessageItems(void);
+		uint32_t getMessageItemsCount(void);
 
 	private:
 		enum MessageType message_type;

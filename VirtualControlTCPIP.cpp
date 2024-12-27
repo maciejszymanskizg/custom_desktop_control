@@ -9,6 +9,7 @@ VirtualControlTCPIP::VirtualControlTCPIP(TCPIP *tcpip, Configuration *conf) :
 {
 	this->tcpip = tcpip;
 	this->conf = conf;
+	memset(this->configuration_values, 0, sizeof(this->configuration_values));
 
 	tcpip->connectSocket();
 }
@@ -27,32 +28,34 @@ void VirtualControlTCPIP::sync(IController::SyncDirection dir)
 void VirtualControlTCPIP::writeTCPIP(void)
 {
 	DataMessage *dataMessage = nullptr;
+	uint32_t value;
 
 	if (!this->tcpip->isConnected()) {
 		log_error("TCPIP client not connected\n");
 		return;
 	}
 
+	dataMessage = new DataMessage(DataMessage::MessageType::MESSAGE_TYPE_SEND_DATA);
+
 	this->conf->accessLock();
 
-	if (this->conf->checkUpdates(this->configuration_ids, VIRTUAL_CONTROL_TCPIP_CONFIGURATION_IDS_COUNT)) {
-		dataMessage = new DataMessage(DataMessage::MessageType::MESSAGE_TYPE_SEND_DATA);
+	for (uint32_t i = 0; i < VIRTUAL_CONTROL_TCPIP_CONFIGURATION_IDS_COUNT; i++) {
+		value = this->conf->getValue(this->configuration_ids[i]);
 
-		for (uint32_t i = 0; i < VIRTUAL_CONTROL_TCPIP_CONFIGURATION_IDS_COUNT; i++) {
-			if (this->conf->isUpdated(this->configuration_ids[i])) {
-				dataMessage->addMessageItem(this->configuration_ids[i], this->conf->getValue(this->configuration_ids[i]));
-				this->conf->cleanUpdates(this->configuration_ids[i]);
-			}
+		if (this->configuration_values[i] != value) {
+			dataMessage->addMessageItem(this->configuration_ids[i], value);
+			this->configuration_values[i] = value;
 		}
 	}
 
 	this->conf->accessUnlock();
 
-	if (dataMessage) {
+	if (dataMessage->getMessageItemsCount() > 0) {
 		size_t size;
 		uint8_t *buffer = dataMessage->getRawData(size);
 
 		this->tcpip->writeData(buffer, size);
-		delete dataMessage;
 	}
+
+	delete dataMessage;
 }

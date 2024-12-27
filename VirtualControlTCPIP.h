@@ -69,6 +69,7 @@ class VirtualControlTCPIP : public IController {
 			CONFIGURATION_ID_RADIO_BUTTON_EXT3,
 			CONFIGURATION_ID_RADIO_SWITCH_CHANNEL
 		};
+		uint32_t configuration_values[VIRTUAL_CONTROL_TCPIP_CONFIGURATION_IDS_COUNT];
 
 		void writeTCPIP(void);
 

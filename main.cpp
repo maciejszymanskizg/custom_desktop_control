@@ -47,8 +47,10 @@ struct MainParameters {
 	char i2c_node[32];
 	char input_ip[32];
 	unsigned short input_port;
+	bool input_server;
 	char output_ip[32];
 	unsigned short output_port;
+	bool output_server;
 	bool log_changes;
 };
 
@@ -92,9 +94,11 @@ void printUsage(const char *name)
 	log_info("\t-c | --i2c           (optional) I2C device node\n");
 	log_info("\t-a | --input-ip      (optional) IP address for TCPIP connection in input engine\n");
 	log_info("\t-p | --input-port    (optional) IP port for TCPIP connection in input engine\n");
+	log_info("\t-s | --input-server  (optional) configure input TCPIP as server\n");
 	log_info("\t-d | --output-ip     (optional) IP address for TCPIP connection in input engine\n");
 	log_info("\t-r | --output-port   (optional) IP port for TCPIP connection in input engine\n");
 	log_info("\t-l | --log-changes   (optional) Print configuration value changes\n");
+	log_info("\t-e | --output-server (optional) configure output TCPIP as server\n");
 	log_info("\t-v | --version       (optional) print version string\n");
 	log_info("\t-h | --help          (optional) print help information\n");
 }
@@ -164,8 +168,10 @@ bool parseParams(int argc, char *argv[], struct MainParameters & params)
 		{ "i2c", required_argument, NULL, 'c' },
 		{ "input-ip", required_argument, NULL, 'a' },
 		{ "input-port", required_argument, NULL, 'p' },
+		{ "input-server", no_argument, NULL, 's' },
 		{ "output-ip", required_argument, NULL, 'd' },
 		{ "output-port", required_argument, NULL, 'r' },
+		{ "output-server", no_argument, NULL, 'e' },
 		{ "log-changes", no_argument, NULL, 'l' },
 		{ "version", no_argument, NULL, 'v' },
 		{ "help", no_argument, NULL, 'h' },
@@ -298,6 +304,16 @@ bool parseParams(int argc, char *argv[], struct MainParameters & params)
 					params.log_changes = true;
 					break;
 				}
+			case 's':
+				{
+					params.input_server = true;
+					break;
+				}
+			case 'e':
+				{
+					params.output_server = true;
+					break;
+				}
 			case 'v':
 				{
 					printVersion();
@@ -328,6 +344,8 @@ void clearOptions(struct MainOptions & options)
 	options.params.input_port = USHRT_MAX;
 	options.params.output_port = USHRT_MAX;
 	options.params.log_changes = false;
+	options.params.input_server = false;
+	options.params.output_server = true;
 	options.i2c_handler = nullptr;
 	options.uart_handler = nullptr;
 	options.tcpip_input_handler = nullptr;
@@ -355,8 +373,8 @@ bool setup(struct MainOptions & options)
 	} else if (options.params.inputControllerType == INPUT_CONTROLLER_TYPE_MASZYNA_TCPIP) {
 		if (strlen(options.params.input_ip) > 0) {
 			if (options.params.input_port != USHRT_MAX) {
-				TCPIP *tcpip = new TCPIP(TCPIP::Mode::TCPIP_MODE_CLIENT,
-						options.params.input_ip, options.params.input_port, &keep_running);
+				TCPIP::Mode mode = options.params.input_server ? TCPIP::Mode::TCPIP_MODE_SERVER : TCPIP::Mode::TCPIP_MODE_CLIENT;
+				TCPIP *tcpip = new TCPIP(mode, options.params.input_ip, options.params.input_port, &keep_running);
 				MaszynaTCPIP *maszynaTCPIP = new MaszynaTCPIP(tcpip, options.train_configuration);
 				options.tcpip_input_handler = dynamic_cast<ICommunicationHandler *>(tcpip);
 				options.input_controller = dynamic_cast<IController *>(maszynaTCPIP);
@@ -371,8 +389,8 @@ bool setup(struct MainOptions & options)
 	} else if (options.params.inputControllerType == INPUT_CONTROLLER_TYPE_VIRTUAL_CONTROL_TCPIP) {
 		if (strlen(options.params.input_ip) > 0) {
 			if (options.params.input_port != USHRT_MAX) {
-				TCPIP *tcpip = new TCPIP(TCPIP::Mode::TCPIP_MODE_CLIENT,
-						options.params.input_ip, options.params.input_port, &keep_running);
+				TCPIP::Mode mode = options.params.input_server ? TCPIP::Mode::TCPIP_MODE_SERVER : TCPIP::Mode::TCPIP_MODE_CLIENT;
+				TCPIP *tcpip = new TCPIP(mode, options.params.input_ip, options.params.input_port, &keep_running);
 				VirtualControlTCPIP *virtualControlTCPIP = new VirtualControlTCPIP(tcpip, options.train_configuration);
 				options.tcpip_input_handler = dynamic_cast<ICommunicationHandler *>(tcpip);
 				options.input_controller = dynamic_cast<IController *>(virtualControlTCPIP);
@@ -395,8 +413,8 @@ bool setup(struct MainOptions & options)
 	if (options.params.outputControllerType == OUTPUT_CONTROLLER_TYPE_VIRT_EU07_TCPIP) {
 		if (strlen(options.params.output_ip) > 0) {
 			if (options.params.output_port != USHRT_MAX) {
-				TCPIP *tcpip = new TCPIP(TCPIP::Mode::TCPIP_MODE_SERVER,
-						options.params.output_ip, options.params.output_port, &keep_running);
+				TCPIP::Mode mode = options.params.output_server ? TCPIP::Mode::TCPIP_MODE_SERVER : TCPIP::Mode::TCPIP_MODE_CLIENT;
+				TCPIP *tcpip = new TCPIP(mode, options.params.output_ip, options.params.output_port, &keep_running);
 				VirtEU07 *virteu07 = new VirtEU07(options.train_configuration, tcpip);
 				options.tcpip_output_handler = dynamic_cast<ICommunicationHandler *>(tcpip);
 				options.output_controller = dynamic_cast<IController *>(virteu07);

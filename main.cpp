@@ -534,6 +534,7 @@ int main(int argc, char *argv[])
 	std::thread *output_thread;
 	unsigned int wait_us = 0;
 
+	srand(time(NULL));
 	clearOptions(options);
 
 	if (parseParams(argc, argv, options.params) == false) {

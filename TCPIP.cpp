@@ -36,10 +36,17 @@ bool TCPIP::connectSocket(void)
 {
 	struct sockaddr_in addr, cli;
 	socklen_t len = sizeof(cli);
+	bool result = false;
 
 	if (this->sockfd == -1) {
 		log_error("Invalid socket.\n");
 		goto err;
+	}
+
+	if (this->connected) {
+		log_debug("Already connected.\n");
+		result = true;
+		goto out;
 	}
 
 	bzero(&addr, sizeof(addr));
@@ -87,7 +94,8 @@ bool TCPIP::connectSocket(void)
 		}
 	}
 
-	return true;
+	result = true;
+	goto out;
 
 err:
 	if (this->sockfd != -1) {
@@ -95,7 +103,8 @@ err:
 		this->sockfd = -1;
 	}
 
-	return false;
+out:
+	return result;
 }
 
 ICommunicationHandler::HandlerType TCPIP::getHandlerType(void)

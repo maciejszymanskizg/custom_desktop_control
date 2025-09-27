@@ -6,30 +6,44 @@
 #define GROUP_ID_UNKNOWN ((uint32_t) -1)
 
 class ConfigurationEntry {
+	public:
+		enum UpdateSource {
+			CONFIGURATION_ENTRY_UPDATE_SOURCE_EXTERNAL,
+			CONFIGURATION_ENTRY_UPDATE_SOURCE_INTERNAL
+		};
+
 	private:
 		const char *name;
+		uint32_t id;
 		uint32_t curr_value;
 		uint32_t prev_value;
 		uint32_t min_value;
 		uint32_t max_value;
-		bool update_flag;
-		uint32_t group_id;
-		bool group_update_flag;
+		uint32_t flags;
+		bool is_updated;
 
 	public:
-		ConfigurationEntry(const char *name, uint32_t min_value, uint32_t max_value, uint32_t init_value);
+		ConfigurationEntry(uint32_t id, const char *name, uint32_t min_value, uint32_t max_value, uint32_t init_value);
+		ConfigurationEntry(const ConfigurationEntry & other);
 		~ConfigurationEntry();
+
+		ConfigurationEntry *clone(void);
+
 		const char *getName(void);
+		const uint32_t getId(void);
 		uint32_t getValue(void);
+		uint32_t getMinValue(void);
 		uint32_t getMaxValue(void);
 		uint32_t getPrevValue(void);
+		uint32_t getFlags(void);
+
 		bool setValue(uint32_t value);
+		bool setValue(uint32_t value, enum UpdateSource source);
+
+		void setFlags(uint32_t flags);
+
 		bool isUpdated(void);
 		void cleanUpdate(void);
-		uint32_t getGroupId(void);
-		void setGroupId(uint32_t group_id);
-		bool isGroupUpdated(void);
-		void cleanGroupUpdate(void);
 };
 
 #endif /* CONFIGURATION_ENTRY_H */

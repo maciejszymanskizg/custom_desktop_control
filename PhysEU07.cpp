@@ -25,7 +25,16 @@
 #define CONFIG_TO_PIN(_conf, _config_id, _pcf8575, _pin) \
 	_pcf8575->setOutput(PCF8575::PIN_P##_pin, (_conf->getValue(_config_id) ? PCF8575::PinStateLow : PCF8575::PinStateHigh))
 
-PhysEU07::PhysEU07(Configuration *train_conf, Configuration *global_conf, ICommunicationHandler *handler) : IController(ControllerType::PHYS_CONTROLLER)
+#define CONFIGURATION_GROUP_ID_0x20 (1 << 16)
+#define CONFIGURATION_GROUP_ID_0x23 (1 << 17)
+#define CONFIGURATION_GROUP_ID_0x41 (1 << 18)
+#define CONFIGURATION_GROUP_ID_0x42 (1 << 19)
+#define CONFIGURATION_GROUP_ID_0x43 (1 << 20)
+#define CONFIGURATION_GROUP_ID_0x44 (1 << 21)
+#define CONFIGURATION_GROUP_ID_0x45 (1 << 22)
+
+PhysEU07::PhysEU07(Configuration *train_conf, Configuration *global_conf, ICommunicationHandler *handler, bool dump_updates)
+	: IController(ControllerType::PHYS_CONTROLLER, dump_updates)
 {
 	this->conf = train_conf;
 	this->global_conf = global_conf;
@@ -74,47 +83,47 @@ PhysEU07::~PhysEU07()
 
 void PhysEU07::setupConfigurationGroups(void)
 {
-	conf->setGroupId(CONFIGURATION_ID_INDICATOR_BUZZER, 0x20);
-	conf->setGroupId(CONFIGURATION_ID_SWITCH_SHP_INDICATOR_DIMM, 0x20);
-	conf->setGroupId(CONFIGURATION_ID_SWITCH_ALERTER_INDICATOR_DIMM, 0x20);
-	conf->setGroupId(CONFIGURATION_ID_AUTO_BLINK_ALERTER, 0x20);
-	conf->setGroupId(CONFIGURATION_ID_INDICATOR_ALERTER, 0x20);
-	conf->setGroupId(CONFIGURATION_ID_INDICATOR_SHP, 0x20);
-	conf->setGroupId(CONFIGURATION_ID_INDICATOR_RESTISTOR_RIDE, 0x20);
-	conf->setGroupId(CONFIGURATION_ID_INDICATOR_TRAIN_HEATING, 0x20);
-	conf->setGroupId(CONFIGURATION_ID_INDICATOR_HIGH_START, 0x20);
-	conf->setGroupId(CONFIGURATION_ID_INDICATOR_WHEELSLIP, 0x20);
-	conf->setGroupId(CONFIGURATION_ID_INDICATOR_LINE_CONTACTORS, 0x20);
-	conf->setGroupId(CONFIGURATION_ID_INDICATOR_VENTILATOR_OVERLOAD, 0x20);
-	conf->setGroupId(CONFIGURATION_ID_INDICATOR_COMPRESSOR_OVERLOAD, 0x20);
-	conf->setGroupId(CONFIGURATION_ID_INDICATOR_CONVERTER_OVERLOAD, 0x20);
-	conf->setGroupId(CONFIGURATION_ID_INDICATOR_MAIN_CIRCUIT_DIFFERENTIAL, 0x20);
-	conf->setGroupId(CONFIGURATION_ID_INDICATOR_LINE_BREAKER, 0x20);
-	conf->setGroupId(CONFIGURATION_ID_INDICATOR_TRACTION_ENGINE_OVERLOAD, 0x20);
+	conf->addFlags(CONFIGURATION_ID_INDICATOR_BUZZER, CONFIGURATION_GROUP_ID_0x20);
+	conf->addFlags(CONFIGURATION_ID_SWITCH_SHP_INDICATOR_DIMM, CONFIGURATION_GROUP_ID_0x20);
+	conf->addFlags(CONFIGURATION_ID_SWITCH_ALERTER_INDICATOR_DIMM, CONFIGURATION_GROUP_ID_0x20);
+	conf->addFlags(CONFIGURATION_ID_AUTO_BLINK_ALERTER, CONFIGURATION_GROUP_ID_0x20);
+	conf->addFlags(CONFIGURATION_ID_INDICATOR_ALERTER, CONFIGURATION_GROUP_ID_0x20);
+	conf->addFlags(CONFIGURATION_ID_INDICATOR_SHP, CONFIGURATION_GROUP_ID_0x20);
+	conf->addFlags(CONFIGURATION_ID_INDICATOR_RESTISTOR_RIDE, CONFIGURATION_GROUP_ID_0x20);
+	conf->addFlags(CONFIGURATION_ID_INDICATOR_TRAIN_HEATING, CONFIGURATION_GROUP_ID_0x20);
+	conf->addFlags(CONFIGURATION_ID_INDICATOR_HIGH_START, CONFIGURATION_GROUP_ID_0x20);
+	conf->addFlags(CONFIGURATION_ID_INDICATOR_WHEELSLIP, CONFIGURATION_GROUP_ID_0x20);
+	conf->addFlags(CONFIGURATION_ID_INDICATOR_LINE_CONTACTORS, CONFIGURATION_GROUP_ID_0x20);
+	conf->addFlags(CONFIGURATION_ID_INDICATOR_VENTILATOR_OVERLOAD, CONFIGURATION_GROUP_ID_0x20);
+	conf->addFlags(CONFIGURATION_ID_INDICATOR_COMPRESSOR_OVERLOAD, CONFIGURATION_GROUP_ID_0x20);
+	conf->addFlags(CONFIGURATION_ID_INDICATOR_CONVERTER_OVERLOAD, CONFIGURATION_GROUP_ID_0x20);
+	conf->addFlags(CONFIGURATION_ID_INDICATOR_MAIN_CIRCUIT_DIFFERENTIAL, CONFIGURATION_GROUP_ID_0x20);
+	conf->addFlags(CONFIGURATION_ID_INDICATOR_LINE_BREAKER, CONFIGURATION_GROUP_ID_0x20);
+	conf->addFlags(CONFIGURATION_ID_INDICATOR_TRACTION_ENGINE_OVERLOAD, CONFIGURATION_GROUP_ID_0x20);
 
-	conf->setGroupId(CONFIGURATION_ID_SWITCH_MEASURE_INSTRUMENT_LIGHT_DIMM, 0x23);
-	conf->setGroupId(CONFIGURATION_ID_SWITCH_MEASURE_INSTRUMENT_LIGHT, 0x23);
-	conf->setGroupId(CONFIGURATION_ID_SWITCH_CABIN_LIGHT, 0x23);
+	conf->addFlags(CONFIGURATION_ID_SWITCH_MEASURE_INSTRUMENT_LIGHT_DIMM, CONFIGURATION_GROUP_ID_0x23);
+	conf->addFlags(CONFIGURATION_ID_SWITCH_MEASURE_INSTRUMENT_LIGHT, CONFIGURATION_GROUP_ID_0x23);
+	conf->addFlags(CONFIGURATION_ID_SWITCH_CABIN_LIGHT, CONFIGURATION_GROUP_ID_0x23);
 
-	conf->setGroupId(CONFIGURATION_ID_SWITCH_RADIO_ENABLE, 0x41);
-	conf->setGroupId(CONFIGURATION_ID_SWITCH_RADIO_MICROPHONE_ENABLE, 0x41);
-	conf->setGroupId(CONFIGURATION_ID_SWITCH_RADIOSTOP, 0x41);
-	conf->setGroupId(CONFIGURATION_ID_BUTTON_RADIO_EXT1, 0x41);
-	conf->setGroupId(CONFIGURATION_ID_BUTTON_RADIO_EXT2, 0x41);
-	conf->setGroupId(CONFIGURATION_ID_BUTTON_RADIO_EXT3, 0x41);
+	conf->addFlags(CONFIGURATION_ID_SWITCH_RADIO_ENABLE, CONFIGURATION_GROUP_ID_0x41);
+	conf->addFlags(CONFIGURATION_ID_SWITCH_RADIO_MICROPHONE_ENABLE, CONFIGURATION_GROUP_ID_0x41);
+	conf->addFlags(CONFIGURATION_ID_SWITCH_RADIOSTOP, CONFIGURATION_GROUP_ID_0x41);
+	conf->addFlags(CONFIGURATION_ID_BUTTON_RADIO_EXT1, CONFIGURATION_GROUP_ID_0x41);
+	conf->addFlags(CONFIGURATION_ID_BUTTON_RADIO_EXT2, CONFIGURATION_GROUP_ID_0x41);
+	conf->addFlags(CONFIGURATION_ID_BUTTON_RADIO_EXT3, CONFIGURATION_GROUP_ID_0x41);
 
-	conf->setGroupId(CONFIGURATION_ID_BREAK_PRESSURE, 0x42);
-	conf->setGroupId(CONFIGURATION_ID_HASLER_VELOCITY, 0x42);
+	conf->addFlags(CONFIGURATION_ID_BREAK_PRESSURE, CONFIGURATION_GROUP_ID_0x42);
+	conf->addFlags(CONFIGURATION_ID_HASLER_VELOCITY, CONFIGURATION_GROUP_ID_0x42);
 
-	conf->setGroupId(CONFIGURATION_ID_PIPE_PRESSURE, 0x43);
-	conf->setGroupId(CONFIGURATION_ID_TANK_PRESSURE, 0x43);
+	conf->addFlags(CONFIGURATION_ID_PIPE_PRESSURE, CONFIGURATION_GROUP_ID_0x43);
+	conf->addFlags(CONFIGURATION_ID_TANK_PRESSURE, CONFIGURATION_GROUP_ID_0x43);
 
-	conf->setGroupId(CONFIGURATION_ID_AMMETER_LOW_VOLTAGE, 0x44);
-	conf->setGroupId(CONFIGURATION_ID_VOLTMETER_LOW_VOLTAGE, 0x44);
-	conf->setGroupId(CONFIGURATION_ID_AMMETER_HIGH_VOLTAGE1, 0x44);
+	conf->addFlags(CONFIGURATION_ID_AMMETER_LOW_VOLTAGE, CONFIGURATION_GROUP_ID_0x44);
+	conf->addFlags(CONFIGURATION_ID_VOLTMETER_LOW_VOLTAGE, CONFIGURATION_GROUP_ID_0x44);
+	conf->addFlags(CONFIGURATION_ID_AMMETER_HIGH_VOLTAGE1, CONFIGURATION_GROUP_ID_0x44);
 
-	conf->setGroupId(CONFIGURATION_ID_AMMETER_HIGH_VOLTAGE2, 0x45);
-	conf->setGroupId(CONFIGURATION_ID_VOLTMETER_HIGH_VOLTAGE, 0x45);
+	conf->addFlags(CONFIGURATION_ID_AMMETER_HIGH_VOLTAGE2, CONFIGURATION_GROUP_ID_0x45);
+	conf->addFlags(CONFIGURATION_ID_VOLTMETER_HIGH_VOLTAGE, CONFIGURATION_GROUP_ID_0x45);
 }
 
 void PhysEU07::sync(IController::SyncDirection direction)
@@ -334,7 +343,7 @@ void PhysEU07::write_0x20(void)
 
 	conf->accessLock();
 
-	bool changed = conf->checkGroupUpdates(0x20);
+	bool changed = conf->checkUpdates(CONFIGURATION_GROUP_ID_0x20);
 
 	if (changed) {
 
@@ -374,7 +383,7 @@ void PhysEU07::write_0x20(void)
 		CONFIG_TO_PIN(conf, CONFIGURATION_ID_INDICATOR_LINE_BREAKER, pcf8575_0x20, 16);
 		CONFIG_TO_PIN(conf, CONFIGURATION_ID_INDICATOR_TRACTION_ENGINE_OVERLOAD, pcf8575_0x20, 17);
 
-		conf->cleanGroupUpdates(0x20);
+		conf->cleanUpdates(0x20);
 	}
 
 	conf->accessUnlock();
@@ -390,7 +399,7 @@ void PhysEU07::write_0x23(void)
 
 	conf->accessLock();
 
-	bool changed = conf->checkGroupUpdates(0x23);
+	bool changed = conf->checkUpdates(CONFIGURATION_GROUP_ID_0x23);
 
 	if (changed) {
 		CONFIG_TO_PIN(conf, CONFIGURATION_ID_SWITCH_MEASURE_INSTRUMENT_LIGHT_DIMM, pcf8575_0x23, 10);
@@ -398,7 +407,7 @@ void PhysEU07::write_0x23(void)
 
 		CONFIG_TO_PIN(conf, CONFIGURATION_ID_SWITCH_CABIN_LIGHT, pcf8575_0x23, 17);
 
-		conf->cleanGroupUpdates(0x23);
+		conf->cleanUpdates(0x23);
 	}
 
 	conf->accessUnlock();
@@ -421,7 +430,7 @@ void PhysEU07::write_0x41(void)
 
 		conf->accessLock();
 
-		bool changed = conf->checkGroupUpdates(0x41);
+		bool changed = conf->checkUpdates(CONFIGURATION_GROUP_ID_0x41);
 
 		if (changed) {
 			radio_enable = conf->getValue(CONFIGURATION_ID_SWITCH_RADIO_ENABLE);
@@ -432,7 +441,7 @@ void PhysEU07::write_0x41(void)
 				conf->getValue(CONFIGURATION_ID_BUTTON_RADIO_EXT3);
 			sfn &= radio_enable;
 
-			conf->cleanGroupUpdates(0x41);
+			conf->cleanUpdates(0x41);
 		}
 
 		conf->accessUnlock();
@@ -466,13 +475,13 @@ void PhysEU07::write_0x42(void)
 
 		conf->accessLock();
 
-		bool changed = conf->checkGroupUpdates(0x42);
+		bool changed = conf->checkUpdates(CONFIGURATION_GROUP_ID_0x42);
 
 		if (changed) {
 			break_pressure = conf->getValue(CONFIGURATION_ID_BREAK_PRESSURE);
 			hasler_velocity = conf->getValue(CONFIGURATION_ID_HASLER_VELOCITY);
 
-			conf->cleanGroupUpdates(0x42);
+			conf->cleanUpdates(0x42);
 		}
 
 		conf->accessUnlock();
@@ -499,13 +508,13 @@ void PhysEU07::write_0x43(void)
 
 		conf->accessLock();
 
-		bool changed = conf->checkGroupUpdates(0x43);
+		bool changed = conf->checkUpdates(CONFIGURATION_GROUP_ID_0x43);
 
 		if (changed) {
 			pipe_pressure = conf->getValue(CONFIGURATION_ID_PIPE_PRESSURE);
 			tank_pressure = conf->getValue(CONFIGURATION_ID_TANK_PRESSURE);
 
-			conf->cleanGroupUpdates(0x43);
+			conf->cleanUpdates(0x43);
 		}
 
 		conf->accessUnlock();
@@ -535,14 +544,14 @@ void PhysEU07::write_0x44(void)
 
 		conf->accessLock();
 
-		bool changed = conf->checkGroupUpdates(0x44);
+		bool changed = conf->checkUpdates(CONFIGURATION_GROUP_ID_0x44);
 
 		if (changed) {
 			alv_value = conf->getValue(CONFIGURATION_ID_AMMETER_LOW_VOLTAGE);
 			vlv_value = conf->getValue(CONFIGURATION_ID_VOLTMETER_LOW_VOLTAGE);
 			ahv_value = conf->getValue(CONFIGURATION_ID_AMMETER_HIGH_VOLTAGE1);
 
-			conf->cleanGroupUpdates(0x44);
+			conf->cleanUpdates(0x44);
 		}
 
 		conf->accessUnlock();
@@ -579,13 +588,13 @@ void PhysEU07::write_0x45(void)
 
 		conf->accessLock();
 
-		bool changed = conf->checkGroupUpdates(0x45);
+		bool changed = conf->checkUpdates(CONFIGURATION_GROUP_ID_0x45);
 
 		if (changed) {
 			ahv_value = conf->getValue(CONFIGURATION_ID_AMMETER_HIGH_VOLTAGE2);
 			vhv_value = conf->getValue(CONFIGURATION_ID_VOLTMETER_HIGH_VOLTAGE);
 
-			conf->cleanGroupUpdates(0x45);
+			conf->cleanUpdates(0x45);
 		}
 
 		conf->accessUnlock();

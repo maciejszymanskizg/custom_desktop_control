@@ -119,7 +119,7 @@ ssize_t TCPIP::readData(uint8_t *buffer, size_t length)
 
 	if (result == 0) {
 		/* Connection closed by peer */
-		this->connected = false;
+		//this->connected = false;
 	}
 
 	return result;
@@ -132,7 +132,7 @@ ssize_t TCPIP::writeData(const uint8_t *buffer, size_t length)
 
 	if (result == 0) {
 		/* Connection closed by peer */
-		this->connected = false;
+		//this->connected = false;
 	}
 
 	return result;
@@ -141,4 +141,12 @@ ssize_t TCPIP::writeData(const uint8_t *buffer, size_t length)
 bool TCPIP::isConnected(void)
 {
 	return this->connected;
+}
+
+void TCPIP::setBlockingMode(bool blocking)
+{
+	if (blocking)
+		FDOperations::setBlockingMode(FDOperations::BlockingMode::FDOPERATIONS_READ_MODE_BLOCKING);
+	else
+		FDOperations::setBlockingMode(FDOperations::BlockingMode::FDOPERATIONS_READ_MODE_NON_BLOCKING);
 }

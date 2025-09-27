@@ -21,7 +21,7 @@ GlobalConfiguration::GlobalConfiguration() : Configuration("Global Configuration
 {
 	for (unsigned int i = 0; i < sizeof(Global_Configuration_Nodes) / sizeof(struct ConfigurationNode); i++) {
 		ConfigurationNode *node = &Global_Configuration_Nodes[i];
-		ConfigurationEntry *e = new ConfigurationEntry(node->getName(), node->getMin(), node->getMax(), node->getInit());
+		ConfigurationEntry *e = new ConfigurationEntry(node->getId(), node->getName(), node->getMin(), node->getMax(), node->getInit());
 		if (e != nullptr) {
 			addConfigurationEntry(node->getId(), e);
 		} else {

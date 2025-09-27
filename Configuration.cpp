@@ -5,8 +5,8 @@
 
 Configuration::Configuration(const char *name, uint32_t size)
 {
-	//log_debug("%s() %p\n", __func__, this);
 	this->name = name;
+	this->external_configuration = nullptr;
 	this->entries = new ConfigurationEntry *[size];
 	this->mutex = new Mutex();
 	if (this->entries != nullptr) {
@@ -19,17 +19,42 @@ Configuration::Configuration(const char *name, uint32_t size)
 	}
 }
 
+Configuration::Configuration(Configuration & other, const char *name)
+{
+	this->name = name;
+	this->external_configuration = nullptr;
+	this->mutex = new Mutex();
+	this->entries = new ConfigurationEntry *[other.entries_count];
+	this->entries_count = other.entries_count;
+
+	if (this->entries != nullptr) {
+		for (uint32_t i = 0; i < this->entries_count; i++) {
+			this->entries[i] = other.entries[i]->clone();
+		}
+	}
+}
+
 Configuration::~Configuration()
 {
-	//log_debug("%s() %p\n", __func__, this);
 	for (uint32_t i = 0; i < this->entries_count; i++) {
 		if (this->entries[i] != nullptr) {
 			ConfigurationEntry *entry = this->entries[i];
 			delete entry;
 		}
 	}
+
 	delete [] this->entries;
 	delete this->mutex;
+}
+
+Configuration * Configuration::clone(const char *name)
+{
+	return new Configuration(*this, name);
+}
+
+void Configuration::addExternalConfiguration(Configuration *conf)
+{
+	this->external_configuration = conf;
 }
 
 bool Configuration::addConfigurationEntry(const uint32_t id, ConfigurationEntry *entry)
@@ -47,23 +72,23 @@ bool Configuration::addConfigurationEntry(const uint32_t id, ConfigurationEntry 
 	return true;
 }
 
-ConfigurationEntry *Configuration::getEntry(const uint32_t id)
+void Configuration::accessLock(void)
 {
-	return (id < this->entries_count ? this->entries[id] : nullptr);
+	this->mutex->lock();
+}
+
+void Configuration::accessUnlock(void)
+{
+	this->mutex->unlock();
 }
 
 const char *Configuration::getName(void)
 {
 	return this->name;
 }
-
-bool Configuration::setValue(const uint32_t id, uint32_t value)
+ConfigurationEntry *Configuration::getEntry(const uint32_t id)
 {
-	if ((id < this->entries_count) && (this->entries[id] != nullptr)) {
-		return this->entries[id]->setValue(value);
-	}
-
-	return false;
+	return (id < this->entries_count ? this->entries[id] : nullptr);
 }
 
 bool Configuration::getValue(const uint32_t id, uint32_t & value)
@@ -98,6 +123,31 @@ uint32_t Configuration::getMaxValue(const uint32_t id)
 	return value;
 }
 
+bool Configuration::setValue(const uint32_t id, uint32_t value)
+{
+	return this->setValue(id, value, CONFIGURATION_UPDATE_SOURCE_INTERNAL);
+}
+
+bool Configuration::setValue(const uint32_t id, uint32_t value, enum UpdateSource source)
+{
+	bool result = false;
+	if ((id < this->entries_count) && (this->entries[id] != nullptr)) {
+		ConfigurationEntry::UpdateSource src = (source == CONFIGURATION_UPDATE_SOURCE_EXTERNAL ?
+				ConfigurationEntry::UpdateSource::CONFIGURATION_ENTRY_UPDATE_SOURCE_EXTERNAL :
+				ConfigurationEntry::UpdateSource::CONFIGURATION_ENTRY_UPDATE_SOURCE_INTERNAL);
+		result = this->entries[id]->setValue(value, src);
+
+		if ((result == true) && (source == CONFIGURATION_UPDATE_SOURCE_INTERNAL) && (this->external_configuration)) {
+			external_configuration->accessLock();
+			external_configuration->setValue(id, value, Configuration::CONFIGURATION_UPDATE_SOURCE_EXTERNAL);
+			external_configuration->accessUnlock();
+		}
+	}
+
+	return result;
+
+}
+
 bool Configuration::isUpdated(const uint32_t id)
 {
 	if ((id < this->entries_count) && (this->entries[id] != nullptr)) {
@@ -105,48 +155,6 @@ bool Configuration::isUpdated(const uint32_t id)
 	}
 
 	return false;
-}
-
-void Configuration::dumpConfig(void)
-{
-	for (uint32_t i = 0; i < this->entries_count; i++) {
-		if (this->entries[i] != nullptr) {
-			log_debug("[0x%08x] [%s] : %u\n", i, this->entries[i]->getName(),
-				this->entries[i]->getValue());
-		}
-	}
-}
-
-bool Configuration::dumpConfigUpdates(void)
-{
-	bool result = false;
-
-	for (uint32_t i = 0; i < this->entries_count; i++) {
-		if ((this->entries[i] != nullptr) && (this->entries[i]->isUpdated())) {
-			log_debug("[0x%08x] [%s] : %u\n", i, this->entries[i]->getName(),
-				this->entries[i]->getValue());
-
-			result = true;
-		}
-	}
-
-	return result;
-}
-
-void Configuration::cleanUpdates(const uint32_t id)
-{
-	if ((id < this->entries_count) && (this->entries[id] != nullptr)) {
-		this->entries[id]->cleanUpdate();
-	}
-}
-
-void Configuration::cleanUpdates(void)
-{
-	for (uint32_t i = 0; i < this->entries_count; i++) {
-		if ((this->entries[i] != nullptr) && (this->entries[i]->isUpdated())) {
-			this->entries[i]->cleanUpdate();
-		}
-	}
 }
 
 bool Configuration::checkUpdates(const uint32_t *ids, uint32_t elems)
@@ -165,13 +173,13 @@ bool Configuration::checkUpdates(const uint32_t *ids, uint32_t elems)
 	return result;
 }
 
-bool Configuration::checkGroupUpdates(uint32_t group_id)
+bool Configuration::checkUpdates(const uint32_t flags)
 {
 	bool result = false;
 
 	for (uint32_t i = 0; i < this->entries_count; i++) {
-		if ((this->entries[i]->getGroupId() == group_id) &&
-				(this->entries[i]->isGroupUpdated())) {
+		if (((this->entries[i]->getFlags() & flags) == flags) &&
+				(this->entries[i]->isUpdated())) {
 			result = true;
 			break;
 		}
@@ -180,53 +188,93 @@ bool Configuration::checkGroupUpdates(uint32_t group_id)
 	return result;
 }
 
-void Configuration::cleanGroupUpdates(const uint32_t group_id)
+void Configuration::cleanUpdate(const uint32_t id)
+{
+	if ((id < this->entries_count) && (this->entries[id] != nullptr)) {
+		this->entries[id]->cleanUpdate();
+	}
+}
+
+void Configuration::cleanUpdates(void)
 {
 	for (uint32_t i = 0; i < this->entries_count; i++) {
-		if (this->entries[i]->getGroupId() == group_id) {
-			this->entries[i]->cleanGroupUpdate();
+		if ((this->entries[i] != nullptr) && (this->entries[i]->isUpdated())) {
+			this->entries[i]->cleanUpdate();
 		}
 	}
 }
 
-void Configuration::dumpPointers(void)
+void Configuration::cleanUpdates(const uint32_t flags)
 {
-	for (uint32_t i = 0; i < (uint32_t) this->entries_count; i++) {
-		log_info("this->entries[%u] = %p\n", i,
-				this->entries[i]);
+	for (uint32_t i = 0; i < this->entries_count; i++) {
+		if (((this->entries[i]->getFlags() & flags) == flags) &&
+				(this->entries[i]->isUpdated())) {
+			this->entries[i]->cleanUpdate();
+		}
 	}
 }
 
-void Configuration::accessLock(void)
-{
-	this->mutex->lock();
-}
-
-void Configuration::accessUnlock(void)
-{
-	this->mutex->unlock();
-}
-
-bool Configuration::setGroupId(const uint32_t id, const uint32_t group_id)
+bool Configuration::setFlags(const uint32_t id, const uint32_t flags)
 {
 	bool result = false;
 
 	if ((id < this->entries_count) && (this->entries[id] != nullptr)) {
-		this->entries[id]->setGroupId(group_id);
+		this->entries[id]->setFlags(flags);
 		result = true;
 	}
 
 	return result;
 }
 
-bool Configuration::getGroupId(const uint32_t id, uint32_t & group_id)
+bool Configuration::addFlags(const uint32_t id, const uint32_t flags)
 {
 	bool result = false;
 
 	if ((id < this->entries_count) && (this->entries[id] != nullptr)) {
-		group_id = this->entries[id]->getGroupId();
+		this->entries[id]->setFlags(this->entries[id]->getFlags() | flags);
+		result = true;
+	}
+
+	return result;
+
+}
+
+bool Configuration::getFlags(const uint32_t id, uint32_t & flags)
+{
+	bool result = false;
+
+	if ((id < this->entries_count) && (this->entries[id] != nullptr)) {
+		flags = this->entries[id]->getFlags();
 		result = true;
 	}
 
 	return result;
 }
+
+void Configuration::dumpConfig(void)
+{
+	for (uint32_t i = 0; i < this->entries_count; i++) {
+		if (this->entries[i] != nullptr) {
+			log_debug("[0x%08x] [%s] : %u\n", i, this->entries[i]->getName(),
+				this->entries[i]->getValue());
+		}
+	}
+}
+
+bool Configuration::dumpConfigUpdates(void)
+{
+	bool result = false;
+
+	for (uint32_t i = 0; i < this->entries_count; i++) {
+		if ((this->entries[i] != nullptr) && (this->entries[i]->isUpdated())) {
+			log_info("(%s) [0x%08x] [%s] : %u\n", this->name, i, this->entries[i]->getName(),
+				this->entries[i]->getValue());
+
+			result = true;
+		}
+	}
+
+	return result;
+}
+
+

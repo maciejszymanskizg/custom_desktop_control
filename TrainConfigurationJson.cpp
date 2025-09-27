@@ -2,6 +2,7 @@
 #include <string.h>
 #include "TrainConfigurationJson.h"
 #include "TrainConfigurationIDs.h"
+#include "Logger.h"
 
 #define KEY_ID_ENTRY(_key, _id) { .key = _key, .id = _id }
 

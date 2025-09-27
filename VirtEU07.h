@@ -21,7 +21,7 @@ class VirtEU07 : public IController {
 		void dumpBuffer(uint8_t *buffer, size_t size, bool incomming);
 
 	public:
-		VirtEU07(Configuration *conf, TCPIP *tcpip);
+		VirtEU07(Configuration *conf, TCPIP *tcpip, bool dump_updates);
 		virtual ~VirtEU07();
 
 		virtual void sync(SyncDirection dir);

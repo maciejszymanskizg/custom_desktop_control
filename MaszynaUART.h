@@ -15,7 +15,7 @@ class MaszynaUART : public IController, public Maszyna {
 		void writeUART(void);
 
 	public:
-		MaszynaUART(ICommunicationHandler *uart, Configuration *conf, bool send_if_received);
+		MaszynaUART(ICommunicationHandler *uart, Configuration *conf, bool send_if_received, bool dump_updates);
 		virtual ~MaszynaUART();
 
 		virtual void sync(SyncDirection dir);

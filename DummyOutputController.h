@@ -8,7 +8,7 @@ class DummyOutputController : public IDummyController {
 		Configuration *conf;
 
 	public:
-		DummyOutputController(Configuration *conf);
+		DummyOutputController(Configuration *conf, bool dump_updates);
 		virtual ~DummyOutputController();
 
 		virtual void sync(SyncDirection direction);

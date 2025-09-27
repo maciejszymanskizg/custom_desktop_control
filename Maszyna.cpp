@@ -7,8 +7,9 @@
 
 #define UNPACK_16BIT(a, b) ((a & 0xff) | ((b & 0xff) << 8))
 
-Maszyna::Maszyna(Configuration *conf) {
+Maszyna::Maszyna(Configuration *conf, bool dump_updates) {
 	this->conf = conf;
+	this->dump_updates = dump_updates;
 }
 
 Maszyna::~Maszyna()
@@ -172,6 +173,9 @@ bool Maszyna::handleOutputBuffer(uint8_t *buffer, uint32_t size)
 	buffer[3] = MASZYNA_PREAMBLE_BYTE;
 
 	conf->accessLock();
+
+	if (this->dump_updates)
+		conf->dumpConfigUpdates();
 
 	/* byte 4 : switch group 0 */
 	buffer[4] =

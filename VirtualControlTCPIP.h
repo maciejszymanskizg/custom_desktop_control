@@ -74,7 +74,7 @@ class VirtualControlTCPIP : public IController {
 		void writeTCPIP(void);
 
 	public:
-		VirtualControlTCPIP(TCPIP *tcpip, Configuration *conf);
+		VirtualControlTCPIP(TCPIP *tcpip, Configuration *conf, bool dump_updates);
 		virtual ~VirtualControlTCPIP();
 
 		virtual void sync(SyncDirection dir);

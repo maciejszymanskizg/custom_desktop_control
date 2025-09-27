@@ -6,7 +6,7 @@
 
 class IDummyController : public IController {
 	public:
-		IDummyController(ControllerType type);
+		IDummyController(ControllerType type, bool dump_updates);
 		virtual ~IDummyController();
 
 		virtual void sync(SyncDirection direction) = 0;

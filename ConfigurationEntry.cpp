@@ -28,6 +28,11 @@ uint32_t ConfigurationEntry::getValue(void)
 	return this->curr_value;
 }
 
+uint32_t ConfigurationEntry::getMaxValue(void)
+{
+	return this->max_value;
+}
+
 uint32_t ConfigurationEntry::getPrevValue(void)
 {
 	return this->prev_value;

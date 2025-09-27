@@ -28,6 +28,7 @@ class Configuration {
 		bool setValue(const uint32_t id, uint32_t value);
 		bool getValue(const uint32_t id, uint32_t & value);
 		uint32_t getValue(const uint32_t id);
+		uint32_t getMaxValue(const uint32_t id);
 		bool isUpdated(const uint32_t id);
 		bool setGroupId(const uint32_t id, const uint32_t group_id);
 		bool getGroupId(const uint32_t id, uint32_t & value);

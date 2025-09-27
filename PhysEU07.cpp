@@ -96,12 +96,12 @@ void PhysEU07::setupConfigurationGroups(void)
 	conf->setGroupId(CONFIGURATION_ID_SWITCH_MEASURE_INSTRUMENT_LIGHT, 0x23);
 	conf->setGroupId(CONFIGURATION_ID_SWITCH_CABIN_LIGHT, 0x23);
 
-	conf->setGroupId(CONFIGURATION_ID_RADIO_SWITCH_ENABLE, 0x41);
-	conf->setGroupId(CONFIGURATION_ID_RADIO_SWITCH_MICROPHONE_ENABLE, 0x41);
-	conf->setGroupId(CONFIGURATION_ID_RADIO_BUTTON_RADIOSTOP, 0x41);
-	conf->setGroupId(CONFIGURATION_ID_RADIO_BUTTON_EXT1, 0x41);
-	conf->setGroupId(CONFIGURATION_ID_RADIO_BUTTON_EXT2, 0x41);
-	conf->setGroupId(CONFIGURATION_ID_RADIO_BUTTON_EXT3, 0x41);
+	conf->setGroupId(CONFIGURATION_ID_SWITCH_RADIO_ENABLE, 0x41);
+	conf->setGroupId(CONFIGURATION_ID_SWITCH_RADIO_MICROPHONE_ENABLE, 0x41);
+	conf->setGroupId(CONFIGURATION_ID_SWITCH_RADIOSTOP, 0x41);
+	conf->setGroupId(CONFIGURATION_ID_BUTTON_RADIO_EXT1, 0x41);
+	conf->setGroupId(CONFIGURATION_ID_BUTTON_RADIO_EXT2, 0x41);
+	conf->setGroupId(CONFIGURATION_ID_BUTTON_RADIO_EXT3, 0x41);
 
 	conf->setGroupId(CONFIGURATION_ID_BREAK_PRESSURE, 0x42);
 	conf->setGroupId(CONFIGURATION_ID_HASLER_VELOCITY, 0x42);
@@ -280,16 +280,16 @@ void PhysEU07::read_0x41(void)
 
 			conf->accessLock();
 
-			conf->setValue(CONFIGURATION_ID_RADIO_SWITCH_ENABLE, radio_enable);
-			conf->setValue(CONFIGURATION_ID_RADIO_SWITCH_NOISE, radio_noise);
-			conf->setValue(CONFIGURATION_ID_RADIO_SWITCH_MICROPHONE_ENABLE, radio_microphone);
-			conf->setValue(CONFIGURATION_ID_RADIO_BUTTON_RADIOSTOP, radio_stop);
-			conf->setValue(CONFIGURATION_ID_RADIO_BUTTON_EXT1, radio_ext1);
-			conf->setValue(CONFIGURATION_ID_RADIO_BUTTON_EXT2, radio_ext2);
-			conf->setValue(CONFIGURATION_ID_RADIO_BUTTON_EXT3, radio_ext3);
-			conf->setValue(CONFIGURATION_ID_RADIO_SWITCH_CHANNEL, radio_channel);
-			conf->setValue(CONFIGURATION_ID_RADIO_SWITCH_VOLUME_LEVEL, radio_volume);
-			conf->setValue(CONFIGURATION_ID_RADIO_SWITCH_LISTENING_LEVEL, radio_listen_volume);
+			conf->setValue(CONFIGURATION_ID_SWITCH_RADIO_ENABLE, radio_enable);
+			conf->setValue(CONFIGURATION_ID_SWITCH_RADIO_NOISE, radio_noise);
+			conf->setValue(CONFIGURATION_ID_SWITCH_RADIO_MICROPHONE_ENABLE, radio_microphone);
+			conf->setValue(CONFIGURATION_ID_SWITCH_RADIOSTOP, radio_stop);
+			conf->setValue(CONFIGURATION_ID_BUTTON_RADIO_EXT1, radio_ext1);
+			conf->setValue(CONFIGURATION_ID_BUTTON_RADIO_EXT2, radio_ext2);
+			conf->setValue(CONFIGURATION_ID_BUTTON_RADIO_EXT3, radio_ext3);
+			conf->setValue(CONFIGURATION_ID_SWITCH_RADIO_CHANNEL, radio_channel);
+			conf->setValue(CONFIGURATION_ID_SWITCH_RADIO_VOLUME_LEVEL, radio_volume);
+			conf->setValue(CONFIGURATION_ID_SWITCH_RADIO_LISTENING_LEVEL, radio_listen_volume);
 
 			conf->accessUnlock();
 		}
@@ -424,12 +424,12 @@ void PhysEU07::write_0x41(void)
 		bool changed = conf->checkGroupUpdates(0x41);
 
 		if (changed) {
-			radio_enable = conf->getValue(CONFIGURATION_ID_RADIO_SWITCH_ENABLE);
-			sfn = conf->getValue(CONFIGURATION_ID_RADIO_SWITCH_MICROPHONE_ENABLE) |
-				conf->getValue(CONFIGURATION_ID_RADIO_BUTTON_RADIOSTOP) |
-				conf->getValue(CONFIGURATION_ID_RADIO_BUTTON_EXT1) |
-				conf->getValue(CONFIGURATION_ID_RADIO_BUTTON_EXT2) |
-				conf->getValue(CONFIGURATION_ID_RADIO_BUTTON_EXT3);
+			radio_enable = conf->getValue(CONFIGURATION_ID_SWITCH_RADIO_ENABLE);
+			sfn = conf->getValue(CONFIGURATION_ID_SWITCH_RADIO_MICROPHONE_ENABLE) |
+				conf->getValue(CONFIGURATION_ID_SWITCH_RADIOSTOP) |
+				conf->getValue(CONFIGURATION_ID_BUTTON_RADIO_EXT1) |
+				conf->getValue(CONFIGURATION_ID_BUTTON_RADIO_EXT2) |
+				conf->getValue(CONFIGURATION_ID_BUTTON_RADIO_EXT3);
 			sfn &= radio_enable;
 
 			conf->cleanGroupUpdates(0x41);

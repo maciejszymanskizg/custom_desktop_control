@@ -3,7 +3,7 @@
 #include "TrainConfigurationIDs.h"
 #include "Logger.h"
 
-VirtEU07::VirtEU07(Configuration *conf, TCPIP *tcpip) : IController(ControllerType::PHYS_CONTROLLER)
+VirtEU07::VirtEU07(Configuration *conf, TCPIP *tcpip, bool dump_updates) : IController(ControllerType::PHYS_CONTROLLER, dump_updates)
 {
 	this->conf = conf;
 	this->tcpip = tcpip;
@@ -67,7 +67,7 @@ DataMessage *VirtEU07::createRequestDataMessage(void)
 		for (uint32_t i = 0; i < sizeof(update_ids) / sizeof(update_ids[0]); i++) {
 			if (this->conf->isUpdated(update_ids[i])) {
 				result->addMessageItem(update_ids[i], this->conf->getValue(update_ids[i]));
-				this->conf->cleanUpdates(update_ids[i]);
+				this->conf->cleanUpdate(update_ids[i]);
 			}
 		}
 	}

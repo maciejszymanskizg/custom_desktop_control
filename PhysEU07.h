@@ -39,7 +39,7 @@ class PhysEU07 : public IController {
 		void write_0x44(void);
 		void write_0x45(void);
 	public:
-		PhysEU07(Configuration *train_conf, Configuration *global_conf, ICommunicationHandler *handler);
+		PhysEU07(Configuration *train_conf, Configuration *global_conf, ICommunicationHandler *handler, bool dump_updates);
 		virtual ~PhysEU07();
 
 		virtual void sync(SyncDirection dir);

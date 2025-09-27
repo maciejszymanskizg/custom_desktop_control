@@ -9,9 +9,10 @@
 class Maszyna {
 	private:
 		Configuration *conf;
+		bool dump_updates;
 
 	public:
-		Maszyna(Configuration *conf);
+		Maszyna(Configuration *conf, bool dump_updates);
 		~Maszyna();
 
 		bool handleInputBuffer(uint8_t *buffer, uint32_t size);

@@ -2,10 +2,10 @@
 #include "DummyInputController.h"
 #include "TrainConfigurationIDs.h"
 
-#define RANDOM_CONDITION(x_) (rand() % x_ == 0)
+#define RANDOM_ID(max_, id_) ((rand() % max_) == id_)
 #define RANDOM_VALUE(x_) (rand() % x_)
 
-DummyInputController::DummyInputController(Configuration *conf) : IDummyController(ControllerType::HOST_CONTROLLER)
+DummyInputController::DummyInputController(Configuration *conf, bool dump_updates) : IDummyController(ControllerType::HOST_CONTROLLER, dump_updates)
 {
 	this->conf = conf;
 }
@@ -15,22 +15,24 @@ DummyInputController::~DummyInputController()
 
 }
 
-void DummyInputController::generateRandomData(void)
-{
-	this->conf->accessLock();
-
-	if (RANDOM_CONDITION(5)) {
-		this->conf->setValue(CONFIGURATION_ID_HASLER_VELOCITY, RANDOM_VALUE(150));
-	}
-
-	if (RANDOM_CONDITION(4)) {
-		this->conf->setValue(CONFIGURATION_ID_VOLTMETER_LOW_VOLTAGE, RANDOM_VALUE(150));
-	}
-
-	this->conf->accessUnlock();
-}
-
 void DummyInputController::sync(IController::SyncDirection dir)
 {
-	generateRandomData();
+	if (dir == IController::SyncDirection::TO_CONTROLLER) {
+		this->conf->accessLock();
+
+		for (int i = 0; i < CONFIGURATION_ID_MAX; i++) {
+			if ((RANDOM_ID(CONFIGURATION_ID_MAX, i)) && (rand() % 1000 == 278)) {
+				this->conf->setValue(i, RANDOM_VALUE(this->conf->getMaxValue(i)));
+			}
+		}
+
+		this->conf->accessUnlock();
+	} else {
+		if (this->dump_updates) {
+			this->conf->accessLock();
+			this->conf->dumpConfigUpdates();
+			this->conf->cleanUpdates();
+			this->conf->accessUnlock();
+		}
+	}
 }

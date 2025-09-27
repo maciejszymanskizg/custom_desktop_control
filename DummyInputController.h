@@ -7,9 +7,8 @@ class DummyInputController : public IDummyController {
 	private:
 		Configuration *conf;
 
-		void generateRandomData(void);
 	public:
-		DummyInputController(Configuration *conf);
+		DummyInputController(Configuration *conf, bool dump_updates);
 		virtual ~DummyInputController();
 
 		virtual void sync(SyncDirection direction);

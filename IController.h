@@ -13,7 +13,7 @@ class IController {
 			TO_CONTROLLER,
 		};
 
-		IController(ControllerType type);
+		IController(ControllerType type, bool dump_updates);
 		virtual ~IController();
 
 		enum ControllerType getType(void);
@@ -21,6 +21,9 @@ class IController {
 
 	private:
 		enum ControllerType type;
+
+	protected:
+		bool dump_updates;
 };
 
 #endif /* ICONTROLLER_H */

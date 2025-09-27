@@ -4,8 +4,8 @@
 #include "DataMessage.h"
 #include "Logger.h"
 
-VirtualControlTCPIP::VirtualControlTCPIP(TCPIP *tcpip, Configuration *conf) :
-	IController(IController::ControllerType::HOST_CONTROLLER)
+VirtualControlTCPIP::VirtualControlTCPIP(TCPIP *tcpip, Configuration *conf, bool dump_updates) :
+	IController(IController::ControllerType::HOST_CONTROLLER, dump_updates)
 {
 	this->tcpip = tcpip;
 	this->conf = conf;

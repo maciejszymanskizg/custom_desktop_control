@@ -14,6 +14,7 @@ class TCPIP : public ICommunicationHandler, FDOperations {
 		TCPIP(enum Mode mode, const char *address, unsigned int port, volatile sig_atomic_t *running_flag);
 		virtual ~TCPIP();
 		bool connectSocket(void);
+		void setBlockingMode(bool blocking);
 
 		virtual HandlerType getHandlerType(void);
 		virtual ssize_t readData(uint8_t *buffer, size_t length);

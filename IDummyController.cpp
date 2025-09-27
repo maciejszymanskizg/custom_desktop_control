@@ -1,6 +1,6 @@
 #include "IDummyController.h"
 
-IDummyController::IDummyController(ControllerType type) : IController(type)
+IDummyController::IDummyController(ControllerType type, bool dump_updates) : IController(type, dump_updates)
 {
 }
 

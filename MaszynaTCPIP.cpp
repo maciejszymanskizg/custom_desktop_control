@@ -6,8 +6,8 @@
 #define MASZYNA_TCP_PREAMBLE_BYTES_COUNT 4
 #define MASZYNA_TCP_PREAMBLE_BYTE 0xEF
 
-MaszynaTCPIP::MaszynaTCPIP(TCPIP *tcpip, Configuration *conf) :
-	IController(IController::ControllerType::HOST_CONTROLLER), Maszyna(conf)
+MaszynaTCPIP::MaszynaTCPIP(TCPIP *tcpip, Configuration *conf, bool dump_updates) :
+	IController(IController::ControllerType::HOST_CONTROLLER, dump_updates), Maszyna(conf, dump_updates)
 {
 	this->tcpip = tcpip;
 	tcpip->connectSocket();

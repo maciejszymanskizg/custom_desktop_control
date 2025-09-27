@@ -2,8 +2,8 @@
 #include "Logger.h"
 #include "MaszynaUART.h"
 
-MaszynaUART::MaszynaUART(ICommunicationHandler *uart, Configuration *conf, bool send_if_received) :
-	IController(IController::ControllerType::HOST_CONTROLLER), Maszyna(conf)
+MaszynaUART::MaszynaUART(ICommunicationHandler *uart, Configuration *conf, bool send_if_received, bool dump_updates) :
+	IController(IController::ControllerType::HOST_CONTROLLER, dump_updates), Maszyna(conf, dump_updates)
 {
 	this->uart = uart;
 	this->packet_received = false;

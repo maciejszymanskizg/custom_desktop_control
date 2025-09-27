@@ -23,13 +23,15 @@
 #include "VirtEU07.h"
 #include "PhysEU07.h"
 #include "VirtualControlTCPIP.h"
+#include "JsonTCPIP.h"
 
 enum InputControllerType {
 	INPUT_CONTROLLER_TYPE_UNKNOWN,
 	INPUT_CONTROLLER_TYPE_MASZYNA_UART,
 	INPUT_CONTROLLER_TYPE_MASZYNA_TCPIP,
 	INPUT_CONTROLLER_TYPE_VIRTUAL_CONTROL_TCPIP,
-	INPUT_CONTROLLER_TYPE_DUMMY
+	INPUT_CONTROLLER_TYPE_DUMMY,
+	INPUT_CONTROLLER_TYPE_JSON_TCPIP
 };
 
 enum OutputControllerType {
@@ -62,8 +64,10 @@ struct MainOptions {
 	ICommunicationHandler *tcpip_output_handler;
 	IController *input_controller;
 	IController *output_controller;
-	TrainConfiguration *train_configuration;
-	GlobalConfiguration *global_configuration;
+	Configuration *train_configuration;
+	Configuration *input_configuration;
+	Configuration *output_configuration;
+	Configuration *global_configuration;
 };
 
 static volatile sig_atomic_t keep_running = 1;
@@ -84,6 +88,7 @@ void printUsage(const char *name)
 	log_info("\t                           maszyna-tcpip\n");
 	log_info("\t                           virtual-control-tcpip\n");
 	log_info("\t                           dummy\n");
+	log_info("\t                           json-tcpip\n");
 	log_info("\t-o | --output        (mandatory) output controller name\n");
 	log_info("\t                        supported output controllers\n");
 	log_info("\t                           virt-eu07-tcpip\n");
@@ -191,8 +196,10 @@ bool parseParams(int argc, char *argv[], struct MainParameters & params)
 						params.inputControllerType = INPUT_CONTROLLER_TYPE_VIRTUAL_CONTROL_TCPIP;
 					} else if (strcmp(optarg, "dummy") == 0) {
 						params.inputControllerType = INPUT_CONTROLLER_TYPE_DUMMY;
+					} else if (strcmp(optarg, "json-tcpip") == 0) {
+						params.inputControllerType = INPUT_CONTROLLER_TYPE_JSON_TCPIP;
 					} else {
-						log_error("Unsupported input controller type [%s].\n");
+						log_error("Unsupported input controller type [%s].\n", optarg);
 						result = false;
 					}
 					break;
@@ -351,6 +358,10 @@ void clearOptions(struct MainOptions & options)
 	options.tcpip_input_handler = nullptr;
 	options.tcpip_output_handler = nullptr;
 	options.train_configuration = new TrainConfiguration();
+	options.input_configuration = options.train_configuration->clone("input configuration");
+	options.output_configuration = options.train_configuration->clone("output_configuration");
+	options.input_configuration->addExternalConfiguration(options.output_configuration);
+	options.output_configuration->addExternalConfiguration(options.input_configuration);
 	options.global_configuration = new GlobalConfiguration();
 	options.input_controller = nullptr;
 	options.output_controller = nullptr;
@@ -364,7 +375,7 @@ bool setup(struct MainOptions & options)
 		if (options.params.uart_node.size() > 0) {
 			options.uart_handler = new UART(options.params.uart_node.c_str(), options.params.uart_baudrate, &keep_running);
 			bool send_packet_when_received = options.global_configuration->getValue(CONFIGURATION_ID_MASZYNA_UART_CHECK_PACKET_RECEIVED);
-			MaszynaUART *maszynaUART = new MaszynaUART(options.uart_handler, options.train_configuration, send_packet_when_received);
+			MaszynaUART *maszynaUART = new MaszynaUART(options.uart_handler, options.input_configuration, send_packet_when_received, options.params.log_changes);
 			options.input_controller = dynamic_cast<IController *>(maszynaUART);
 		} else {
 			log_error("UART device not specified.\n");
@@ -375,7 +386,7 @@ bool setup(struct MainOptions & options)
 			if (options.params.input_port != USHRT_MAX) {
 				TCPIP::Mode mode = options.params.input_server ? TCPIP::Mode::TCPIP_MODE_SERVER : TCPIP::Mode::TCPIP_MODE_CLIENT;
 				TCPIP *tcpip = new TCPIP(mode, options.params.input_ip, options.params.input_port, &keep_running);
-				MaszynaTCPIP *maszynaTCPIP = new MaszynaTCPIP(tcpip, options.train_configuration);
+				MaszynaTCPIP *maszynaTCPIP = new MaszynaTCPIP(tcpip, options.input_configuration, options.params.log_changes);
 				options.tcpip_input_handler = dynamic_cast<ICommunicationHandler *>(tcpip);
 				options.input_controller = dynamic_cast<IController *>(maszynaTCPIP);
 			} else {
@@ -391,7 +402,7 @@ bool setup(struct MainOptions & options)
 			if (options.params.input_port != USHRT_MAX) {
 				TCPIP::Mode mode = options.params.input_server ? TCPIP::Mode::TCPIP_MODE_SERVER : TCPIP::Mode::TCPIP_MODE_CLIENT;
 				TCPIP *tcpip = new TCPIP(mode, options.params.input_ip, options.params.input_port, &keep_running);
-				VirtualControlTCPIP *virtualControlTCPIP = new VirtualControlTCPIP(tcpip, options.train_configuration);
+				VirtualControlTCPIP *virtualControlTCPIP = new VirtualControlTCPIP(tcpip, options.input_configuration, options.params.log_changes);
 				options.tcpip_input_handler = dynamic_cast<ICommunicationHandler *>(tcpip);
 				options.input_controller = dynamic_cast<IController *>(virtualControlTCPIP);
 			} else {
@@ -403,8 +414,23 @@ bool setup(struct MainOptions & options)
 			goto out;
 		}
 	} else if (options.params.inputControllerType == INPUT_CONTROLLER_TYPE_DUMMY) {
-		DummyInputController *dummy = new DummyInputController(options.train_configuration);
+		DummyInputController *dummy = new DummyInputController(options.input_configuration, options.params.log_changes);
 		options.input_controller = dynamic_cast<IController *>(dummy);
+	} else if (options.params.inputControllerType == INPUT_CONTROLLER_TYPE_JSON_TCPIP) {
+		if (strlen(options.params.input_ip) > 0) {
+			if (options.params.input_port != USHRT_MAX) {
+				TCPIP *tcpip = new TCPIP(TCPIP::Mode::TCPIP_MODE_SERVER, options.params.input_ip, options.params.input_port, &keep_running);
+				JsonTCPIP *jsonTCPIP = new JsonTCPIP(tcpip, options.input_configuration, options.params.log_changes);
+				options.tcpip_input_handler = dynamic_cast<ICommunicationHandler *>(tcpip);
+				options.input_controller = dynamic_cast<IController *>(jsonTCPIP);
+			} else {
+				log_error("TCPIP port of input controller not specified.\n");
+				goto out;
+			}
+		} else {
+			log_error("TCPIP ip address of input controller not specified.\n");
+			goto out;
+		}
 	} else {
 		log_error("Input controller not specified.\n");
 		goto out;
@@ -415,7 +441,7 @@ bool setup(struct MainOptions & options)
 			if (options.params.output_port != USHRT_MAX) {
 				TCPIP::Mode mode = options.params.output_server ? TCPIP::Mode::TCPIP_MODE_SERVER : TCPIP::Mode::TCPIP_MODE_CLIENT;
 				TCPIP *tcpip = new TCPIP(mode, options.params.output_ip, options.params.output_port, &keep_running);
-				VirtEU07 *virteu07 = new VirtEU07(options.train_configuration, tcpip);
+				VirtEU07 *virteu07 = new VirtEU07(options.output_configuration, tcpip, options.params.log_changes);
 				options.tcpip_output_handler = dynamic_cast<ICommunicationHandler *>(tcpip);
 				options.output_controller = dynamic_cast<IController *>(virteu07);
 			} else {
@@ -429,7 +455,7 @@ bool setup(struct MainOptions & options)
 	} else if (options.params.outputControllerType == OUTPUT_CONTROLLER_TYPE_PHYS_EU07_I2C) {
 		if (strlen(options.params.i2c_node) > 0) {
 			I2C *i2c = new I2C(options.params.i2c_node);
-			PhysEU07 *physEU07 = new PhysEU07(options.train_configuration, options.global_configuration, i2c);
+			PhysEU07 *physEU07 = new PhysEU07(options.output_configuration, options.global_configuration, i2c, options.params.log_changes);
 			options.i2c_handler = dynamic_cast<ICommunicationHandler *>(i2c);
 			options.output_controller = dynamic_cast<IController *>(physEU07);
 		} else {
@@ -437,7 +463,7 @@ bool setup(struct MainOptions & options)
 			goto out;
 		}
 	} else if (options.params.outputControllerType == OUTPUT_CONTROLLER_TYPE_DUMMY) {
-		DummyOutputController *dummy = new DummyOutputController(options.train_configuration);
+		DummyOutputController *dummy = new DummyOutputController(options.output_configuration, options.params.log_changes);
 		options.output_controller = dynamic_cast<IController *>(dummy);
 	} else {
 		log_error("Output controller not specified.\n");
@@ -473,18 +499,14 @@ void freeOptions(struct MainOptions & options)
 	if (options.train_configuration != nullptr)
 		delete options.train_configuration;
 
+	if (options.input_configuration != nullptr)
+		delete options.input_configuration;
+
+	if (options.output_configuration != nullptr)
+		delete options.output_configuration;
+
 	if (options.global_configuration != nullptr)
 		delete options.global_configuration;
-}
-
-void show_conf_updates(struct MainOptions *options)
-{
-	options->train_configuration->accessLock();
-	if (options->params.log_changes) {
-		options->train_configuration->dumpConfigUpdates();
-	}
-	options->train_configuration->cleanUpdates();
-	options->train_configuration->accessUnlock();
 }
 
 void input_controller_thread(struct MainOptions *options)
@@ -494,7 +516,6 @@ void input_controller_thread(struct MainOptions *options)
 
 	while (keep_running) {
 		options->input_controller->sync(IController::SyncDirection::FROM_CONTROLLER);
-		show_conf_updates(options);
 		options->input_controller->sync(IController::SyncDirection::TO_CONTROLLER);
 
 		usleep(wait_us);
@@ -510,7 +531,6 @@ void output_controller_thread(struct MainOptions *options)
 
 	while (keep_running) {
 		options->output_controller->sync(IController::SyncDirection::TO_CONTROLLER);
-		show_conf_updates(options);
 		options->output_controller->sync(IController::SyncDirection::FROM_CONTROLLER);
 
 		usleep(wait_us);

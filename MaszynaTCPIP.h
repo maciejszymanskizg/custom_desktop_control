@@ -16,7 +16,7 @@ class MaszynaTCPIP : public IController, public Maszyna {
 		void writeTCPIP(void);
 
 	public:
-		MaszynaTCPIP(TCPIP *tcpip, Configuration *conf);
+		MaszynaTCPIP(TCPIP *tcpip, Configuration *conf, bool dump_updates);
 		virtual ~MaszynaTCPIP();
 
 		virtual void sync(SyncDirection dir);

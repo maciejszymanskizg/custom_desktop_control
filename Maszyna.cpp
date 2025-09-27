@@ -220,9 +220,9 @@ bool Maszyna::handleOutputBuffer(uint8_t *buffer, uint32_t size)
 
 	/* byte 8 : switch group 4 */
 	buffer[8] =
-		(conf->getValue(CONFIGURATION_ID_RADIO_SWITCH_ENABLE) & 0x1) |
-		((conf->getValue(CONFIGURATION_ID_RADIO_BUTTON_RADIOSTOP) & 0x1) << 1) |
-		((conf->getValue(CONFIGURATION_ID_RADIO_BUTTON_EXT3) & 0x1) << 2);
+		(conf->getValue(CONFIGURATION_ID_SWITCH_RADIO_ENABLE) & 0x1) |
+		((conf->getValue(CONFIGURATION_ID_SWITCH_RADIOSTOP) & 0x1) << 1) |
+		((conf->getValue(CONFIGURATION_ID_BUTTON_RADIO_EXT3) & 0x1) << 2);
 
 	/* byte 9 : switch group 5 */
 	buffer[9] = 0;
@@ -243,8 +243,8 @@ bool Maszyna::handleOutputBuffer(uint8_t *buffer, uint32_t size)
 
 	/* byte 16 : radio controll */
 
-	buffer[16] = (conf->getValue(CONFIGURATION_ID_RADIO_SWITCH_VOLUME_LEVEL) << 4) |
-		(conf->getValue(CONFIGURATION_ID_RADIO_SWITCH_CHANNEL));
+	buffer[16] = (conf->getValue(CONFIGURATION_ID_SWITCH_RADIO_VOLUME_LEVEL) << 4) |
+		(conf->getValue(CONFIGURATION_ID_SWITCH_RADIO_CHANNEL));
 
 	/* bytes 17 - 19 : 0 */
 

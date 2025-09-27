@@ -23,11 +23,11 @@ void DummyOutputController::sync(IController::SyncDirection dir)
 
 	this->conf->accessLock();
 
-	for (int i = 0; i <= CONFIGURATION_ID_RADIO_SWITCH_LISTENING_LEVEL; i++)
+	for (int i = 0; i <= CONFIGURATION_ID_INDICATOR_RADIO_SFN; i++)
 	{
-		if ((RANDOM_ID(CONFIGURATION_ID_RADIO_SWITCH_LISTENING_LEVEL, i)) && (rand() % 2000 == 46))
+		if ((RANDOM_ID(CONFIGURATION_ID_INDICATOR_RADIO_SFN, i)) && (rand() % 2000 == 46))
 		{
-			this->conf->setValue(i, RANDOM_VALUE(2));
+			this->conf->setValue(i, RANDOM_VALUE(this->conf->getMaxValue(i)));
 		}
 	}
 

@@ -21,6 +21,7 @@ class ConfigurationEntry {
 		~ConfigurationEntry();
 		const char *getName(void);
 		uint32_t getValue(void);
+		uint32_t getMaxValue(void);
 		uint32_t getPrevValue(void);
 		bool setValue(uint32_t value);
 		bool isUpdated(void);

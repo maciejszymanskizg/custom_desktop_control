@@ -112,6 +112,17 @@ uint32_t Configuration::getValue(const uint32_t id)
 	return value;
 }
 
+uint32_t Configuration::getMinValue(const uint32_t id)
+{
+	uint32_t value = CONFIGURATION_INVALID_VALUE;
+
+	if ((id < this->entries_count) && (this->entries[id] != nullptr)) {
+		value = this->entries[id]->getMinValue();
+	}
+
+	return value;
+}
+
 uint32_t Configuration::getMaxValue(const uint32_t id)
 {
 	uint32_t value = CONFIGURATION_INVALID_VALUE;

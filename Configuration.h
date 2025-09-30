@@ -40,6 +40,7 @@ class Configuration {
 
 		bool getValue(const uint32_t id, uint32_t & value);
 		uint32_t getValue(const uint32_t id);
+		uint32_t getMinValue(const uint32_t id);
 		uint32_t getMaxValue(const uint32_t id);
 
 		bool setValue(const uint32_t id, uint32_t value);

@@ -3,11 +3,9 @@
 #include "DummyOutputController.h"
 #include "TrainConfigurationIDs.h"
 
-#define RANDOM_ID(max_, id_) ((rand() % max_) == id_)
-#define RANDOM_VALUE(x_) (rand() % x_)
+#define RANDOM_VALUE(x_) (rand() % (x_ + 1))
 
 #define DUMMY_OUTPUT_CONTROLLER_FLAG 0x1
-
 
 DummyOutputController::DummyOutputController(Configuration *conf, bool dump_updates) : IDummyController(ControllerType::PHYS_CONTROLLER, dump_updates)
 {
@@ -79,7 +77,7 @@ void DummyOutputController::sync(IController::SyncDirection dir)
 	if (dir == IController::SyncDirection::FROM_CONTROLLER) {
 
 		/* initial condition to limit number of updates */
-		if (RANDOM_VALUE(10) > 8) {
+		if (RANDOM_VALUE(10000) > 9990) {
 
 			/* randomize number of updates */
 			unsigned int count = RANDOM_VALUE(10);
@@ -88,8 +86,16 @@ void DummyOutputController::sync(IController::SyncDirection dir)
 
 			for (unsigned int i = 0; i < count; i++) {
 				unsigned int id = RANDOM_VALUE(CONFIGURATION_ID_MAX);
-				if (this->conf->getFlags(id) & DUMMY_OUTPUT_CONTROLLER_FLAG)
-					this->conf->setValue(id, RANDOM_VALUE(this->conf->getMaxValue(id)));
+
+				/* skip already updated ids */
+				if (this->conf->isUpdated(id))
+					continue;
+
+				/* update only id with dummy output controller flag */
+				if (this->conf->getFlags(id) & DUMMY_OUTPUT_CONTROLLER_FLAG) {
+					unsigned int range = this->conf->getMaxValue(id) - this->conf->getMinValue(id);
+					this->conf->setValue(id, this->conf->getMinValue(id) + RANDOM_VALUE(range));
+				}
 			}
 
 			this->conf->accessUnlock();

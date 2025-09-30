@@ -251,6 +251,17 @@ bool Configuration::getFlags(const uint32_t id, uint32_t & flags)
 	return result;
 }
 
+uint32_t Configuration::getFlags(const uint32_t id)
+{
+	uint32_t result = 0;
+
+	if ((id < this->entries_count) && (this->entries[id] != nullptr)) {
+		result = this->entries[id]->getFlags();
+	}
+
+	return result;
+}
+
 void Configuration::dumpConfig(void)
 {
 	for (uint32_t i = 0; i < this->entries_count; i++) {

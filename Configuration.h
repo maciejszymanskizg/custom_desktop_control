@@ -55,6 +55,7 @@ class Configuration {
 		bool setFlags(const uint32_t id, const uint32_t flags);
 		bool addFlags(const uint32_t id, const uint32_t flags);
 		bool getFlags(const uint32_t id, uint32_t & flags);
+		uint32_t getFlags(const uint32_t id);
 
 		void dumpConfig(void);
 		bool dumpConfigUpdates(void);

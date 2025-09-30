@@ -127,9 +127,6 @@ bool JSON::ConfigurationToJson(Configuration *conf, char *buffer, unsigned int m
 	buffer[index++] = '}';
 	buffer[index] = '\0';
 
-	if (strlen(buffer) > 2)
-		log_info("buffer : %s\n", buffer);
-
 	result = true;
 
 out:

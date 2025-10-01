@@ -113,8 +113,16 @@ exit:
 
 UART::~UART()
 {
-	if (this->fd != -1)
+	closeConnection();
+}
+
+void UART::closeConnection(void)
+{
+
+	if (this->fd != -1) {
 		close(this->fd);
+		this->fd = -1;
+	}
 }
 
 ICommunicationHandler::HandlerType UART::getHandlerType(void)

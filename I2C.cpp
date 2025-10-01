@@ -22,8 +22,15 @@ I2C::I2C(const char *path)
 
 I2C::~I2C()
 {
-	if (fd != -1)
+	closeConnection();
+}
+
+void I2C::closeConnection(void)
+{
+	if (fd != -1) {
 		close(fd);
+		fd = -1;
+	}
 }
 
 int I2C::setSlaveAddr(uint8_t addr)

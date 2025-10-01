@@ -28,6 +28,7 @@ class TCPIP : public ICommunicationHandler, FDOperations {
 		int client_sockfd;
 		const char *address;
 		unsigned int port;
+		bool bound;
 		bool connected;
 };
 

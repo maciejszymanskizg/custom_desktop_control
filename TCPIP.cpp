@@ -16,6 +16,7 @@ TCPIP::TCPIP(enum TCPIP::Mode mode, const char *address, unsigned int port, vola
 	this->port = port;
 	this->sockfd = socket(AF_INET, SOCK_STREAM, 0);
 	this->client_sockfd = -1;
+	this->bound = false;
 	this->connected = false;
 
 	if (this->sockfd == -1) {
@@ -57,17 +58,24 @@ bool TCPIP::connectSocket(void)
 	if (mode == TCPIP_MODE_SERVER) {
 		int enable = 1;
 
-		if (setsockopt(this->sockfd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &enable, sizeof(enable)) != 0) {
-			log_error("Could not change socket options - errno %d\n", errno);
-			goto err;
+		if (!this->bound) {
+
+			if (setsockopt(this->sockfd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &enable, sizeof(enable)) != 0) {
+				log_error("Could not change socket options - errno %d\n", errno);
+				goto err;
+			}
+
+			if (bind(this->sockfd, (struct sockaddr *) &addr, sizeof(addr)) != 0) {
+				log_error("Could not bind socket - errno %d\n", errno);
+				goto err;
+			}
+
+			this->bound = true;
 		}
 
-		if (bind(this->sockfd, (struct sockaddr *) &addr, sizeof(addr)) != 0) {
-			log_error("Could not bind socket - errno %d\n", errno);
-			goto err;
-		}
+		log_info("Waiting for connection on %s:%d\n", this->address, this->port);
 
-		if (listen(this->sockfd, 5) != 0) {
+		if (listen(this->sockfd, 1) != 0) {
 			log_error("Could not listen on socket - errno %d\n", errno);
 			goto err;
 		}
@@ -99,6 +107,7 @@ bool TCPIP::connectSocket(void)
 
 err:
 	if (this->sockfd != -1) {
+		log_error("Close socket.\n");
 		close(this->sockfd);
 		this->sockfd = -1;
 	}
@@ -117,9 +126,9 @@ ssize_t TCPIP::readData(uint8_t *buffer, size_t length)
 	int fd = (this->mode == TCPIP_MODE_SERVER ? this->client_sockfd : this->sockfd);
 	ssize_t result = readFDData(fd, buffer, length);
 
-	if (result == 0) {
+	if (result < 0) {
 		/* Connection closed by peer */
-		//this->connected = false;
+		this->connected = false;
 	}
 
 	return result;
@@ -130,9 +139,9 @@ ssize_t TCPIP::writeData(const uint8_t *buffer, size_t length)
 	int fd = (this->mode == TCPIP_MODE_SERVER ? this->client_sockfd : this->sockfd);
 	ssize_t result = writeFDData(fd, buffer, length);
 
-	if (result == 0) {
+	if (result < 0) {
 		/* Connection closed by peer */
-		//this->connected = false;
+		this->connected = false;
 	}
 
 	return result;

@@ -12,7 +12,6 @@ JsonTCPIP::JsonTCPIP(TCPIP *tcpip, Configuration *conf, bool dump_updates) :
 	this->conf = conf;
 	this->tcpip = tcpip;
 	tcpip->setBlockingMode(false);
-	tcpip->connectSocket();
 }
 
 JsonTCPIP::~JsonTCPIP()
@@ -21,6 +20,11 @@ JsonTCPIP::~JsonTCPIP()
 
 void JsonTCPIP::sync(IController::SyncDirection dir)
 {
+	if (!this->tcpip->isConnected()) {
+		log_debug("Trying to connect...\n");
+		tcpip->connectSocket();
+	}
+
 	if (dir == IController::SyncDirection::FROM_CONTROLLER) {
 		readTCPIP();
 	} else {
@@ -34,10 +38,12 @@ void JsonTCPIP::readTCPIP(void)
 	uint8_t buffer[JSON_TCPIP_BUFFER_SIZE];
 	bzero(buffer, JSON_TCPIP_BUFFER_SIZE);
 
+	/*
 	if (!this->tcpip->isConnected()) {
 		log_error("TCPIP client not connected\n");
 		return;
 	}
+	*/
 
 	bytes_read = this->tcpip->readData(buffer, JSON_TCPIP_BUFFER_SIZE);
 
@@ -58,10 +64,12 @@ void JsonTCPIP::writeTCPIP(void)
 	uint8_t buffer[JSON_TCPIP_BUFFER_SIZE];
 	bzero(buffer, JSON_TCPIP_BUFFER_SIZE);
 
+	/*
 	if (!this->tcpip->isConnected()) {
 		log_error("TCPIP client not connected\n");
 		return;
 	}
+	*/
 
 	conf->accessLock();
 	if (dump_updates)

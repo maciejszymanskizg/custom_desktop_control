@@ -60,9 +60,12 @@ ssize_t FDOperations::readFDData(int fd, uint8_t *buffer, size_t size)
 		if (res > 0) {
 			total_bytes += res;
 		} else if (res == 0) {
+			/* no bytes written - connection could be closed by peer */
+			total_bytes = -1;
 			break;
 		} else if ((res == -1) && (errno != EAGAIN)) {
 			log_error("Error in reading FD data (%d).\n", errno);
+			total_bytes = -1;
 			break;
 		}
 
@@ -85,9 +88,12 @@ ssize_t FDOperations::writeFDData(int fd, const uint8_t *buffer, size_t size)
 		if (res > 0) {
 			total_bytes += res;
 		} else if (res == 0) {
+			/* no bytes written - connection could be closed by peer */
+			total_bytes = -1;
 			break;
 		} else if ((res == -1) && (errno != EAGAIN)) {
-			log_error("Error in reading FD data (%d).\n", errno);
+			log_error("Error in writing FD data (%d).\n", errno);
+			total_bytes = -1;
 			break;
 		}
 

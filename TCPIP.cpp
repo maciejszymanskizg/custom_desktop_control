@@ -26,11 +26,31 @@ TCPIP::TCPIP(enum TCPIP::Mode mode, const char *address, unsigned int port, vola
 
 TCPIP::~TCPIP()
 {
-	if (this->sockfd != -1)
-		close(this->sockfd);
+	closeConnection();
+}
 
-	if (this->client_sockfd != -1)
+void TCPIP::closeConnection(void)
+{
+	if (this->client_sockfd != -1) {
 		close(this->client_sockfd);
+		this->client_sockfd = -1;
+	} else if (mode == TCPIP_MODE_SERVER) {
+		struct sockaddr_in addr;
+		int sock = socket(AF_INET, SOCK_STREAM, 0);
+
+		bzero(&addr, sizeof(addr));
+		addr.sin_family = AF_INET;
+		addr.sin_addr.s_addr = inet_addr(this->address);
+		addr.sin_port = htons(this->port);
+
+		connect(sock, (struct sockaddr *) &addr, sizeof(addr));
+		close(sock);
+	}
+
+	if (this->sockfd != -1) {
+		close(this->sockfd);
+		this->sockfd = -1;
+	}
 }
 
 bool TCPIP::connectSocket(void)
@@ -40,7 +60,6 @@ bool TCPIP::connectSocket(void)
 	bool result = false;
 
 	if (this->sockfd == -1) {
-		log_error("Invalid socket.\n");
 		goto err;
 	}
 
@@ -73,7 +92,7 @@ bool TCPIP::connectSocket(void)
 			this->bound = true;
 		}
 
-		log_info("Waiting for connection on %s:%d\n", this->address, this->port);
+		log_info("Waiting for connection on %s:%d socket %d\n", this->address, this->port, this->sockfd);
 
 		if (listen(this->sockfd, 1) != 0) {
 			log_error("Could not listen on socket - errno %d\n", errno);
@@ -129,6 +148,11 @@ ssize_t TCPIP::readData(uint8_t *buffer, size_t length)
 	if (result < 0) {
 		/* Connection closed by peer */
 		this->connected = false;
+
+		if (this->mode == TCPIP_MODE_SERVER) {
+			close(this->client_sockfd);
+			this->client_sockfd = -1;
+		}
 	}
 
 	return result;
@@ -142,6 +166,11 @@ ssize_t TCPIP::writeData(const uint8_t *buffer, size_t length)
 	if (result < 0) {
 		/* Connection closed by peer */
 		this->connected = false;
+
+		if (this->mode == TCPIP_MODE_SERVER) {
+			close(this->client_sockfd);
+			this->client_sockfd = -1;
+		}
 	}
 
 	return result;

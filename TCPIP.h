@@ -19,6 +19,7 @@ class TCPIP : public ICommunicationHandler, FDOperations {
 		virtual HandlerType getHandlerType(void);
 		virtual ssize_t readData(uint8_t *buffer, size_t length);
 		virtual ssize_t writeData(const uint8_t *buffer, size_t length);
+		virtual void closeConnection(void);
 
 		bool isConnected(void);
 

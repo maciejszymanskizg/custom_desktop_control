@@ -16,7 +16,7 @@ class ICommunicationHandler {
 		virtual ssize_t readData(uint8_t *buffer, size_t size) = 0;
 		virtual ssize_t writeData(const uint8_t *buffer, size_t size) = 0;
 		virtual HandlerType getHandlerType(void) = 0;
-
+		virtual void closeConnection(void) = 0;
 
 };
 

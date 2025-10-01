@@ -24,6 +24,7 @@ class I2C : public ICommunicationHandler
 		virtual HandlerType getHandlerType(void);
 		virtual ssize_t readData(uint8_t *buffer, size_t length);
 		virtual ssize_t writeData(const uint8_t *buffer, size_t length);
+		virtual void closeConnection(void);
 };
 
 #endif /* I2C_H */

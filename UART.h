@@ -23,6 +23,7 @@ class UART : public ICommunicationHandler, FDOperations {
 		virtual HandlerType getHandlerType(void);
 		virtual ssize_t readData(uint8_t *buffer, size_t size);
 		virtual ssize_t writeData(const uint8_t *buffer, size_t size);
+		virtual void closeConnection(void);
 
 	private:
 		int fd;
